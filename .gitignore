@@ -1,36 +1,34 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Ignore node_modules directory
+node_modules/
+frontend/pnpm-lock.yaml
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
+# Ignore log files
+*.log
 
-# testing
-/coverage
+# Ignore environment variables
+.env
 
-# next.js
-/.next/
-/out/
+# Ignore build output
+dist/
+build/
 
-# production
-/build
-
-# misc
+# Ignore OS generated files
 .DS_Store
-*.pem
+Thumbs.db
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Ignore IDE specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# local env files
-.env*.local
+# Ignore coverage reports
+coverage/
+.nyc_output/
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Ignore temporary files
+*.tmp
+*.temp
