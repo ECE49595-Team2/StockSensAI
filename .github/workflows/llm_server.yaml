@@ -7,7 +7,7 @@ on:
 
 jobs:
 
-  Compile with Docker:
+  compile_docker:
     name: Compile with Docker
     runs-on: ubuntu-latest
         

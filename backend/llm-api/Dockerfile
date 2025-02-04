@@ -2,6 +2,7 @@ FROM gcc:latest
 
 WORKDIR /server
 
+# Copy over the source code
 COPY ./src/* /server/
 
 # Compile
