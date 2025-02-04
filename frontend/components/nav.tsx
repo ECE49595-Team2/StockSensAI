@@ -9,8 +9,8 @@ function Nav()
                 <Image src="/logo.svg" alt="logo" width={100} height={100} />
                 <h1>
                     <span className='text-primary'>Stock</span>
-                    <span className='text-white'>Sens</span>
-                    <span className='text-secondary'>AI</span>
+                    <span className='text-secondary'>Sens</span>
+                    <span className='text-gray-300'>AI</span>
                 </h1>
             </div>
             <div id="navitems">
