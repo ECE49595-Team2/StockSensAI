@@ -1,0 +1,31 @@
+name: Algorithmic Trader CI
+
+on:
+  push:
+    branches: [ "development" ]
+  pull_request:
+    branches: [ "development" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Create .env File
+      run: |
+        echo "API_KEY=${{ secrets.API_KEY }}" >> ./backend/algorithmic-trader/src/.env
+        echo "API_SECRET=${{ secrets.API_SECRET }}" >> ./backend/algorithmic-trader/src/.env
+
+    - name: Log in to GHCR
+      run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ECE49595-Team2 --password-stdin
+      
+    - name: Build the Docker image
+      run: docker build --file ./backend/algorithmic-trader/Dockerfile --tag ghcr.io/ECE49595-Team2/stocksensai-algorithmic:latest ./backend/algorithmic-trader
+      
+    - name: Push the Docker image to GHPR
+      run: docker push ghcr.io/ECE49595-Team2/stocksensai-algorithmic:latest
