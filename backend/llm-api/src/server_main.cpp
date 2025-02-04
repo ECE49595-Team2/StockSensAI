@@ -10,6 +10,26 @@ using namespace std;
 
 #define LISTEN_QUEUE 50 /* Max outstanding connection requests; listen() param */
 
+ssize_t receive_all_client_packets(int sockfd, char* buffer, size_t length) {
+    size_t total_received = 0;
+
+    while (total_received < length) {
+        ssize_t bytes_received = recv(sockfd, buffer + total_received, length - total_received, 0);
+
+        if (bytes_received == -1) {
+            perror("recv");
+            return -1;
+        }
+
+        if (bytes_received == 0) {
+            return total_received;  // Connection closed
+        }
+
+        total_received += bytes_received;
+    }
+    return total_received;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 2) {
@@ -47,9 +67,9 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-    char strRec[1000];
+    char *strRec;
     string recivedMessage;
-    size_t numbytesRec;
+    ssize_t numbytesRec;
     
     // Send
 
@@ -64,7 +84,8 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-        numbytesRec = recv(client_sockfd, strRec, strlen(strRec), 0);
+        size_t msg_size;
+        numbytesRec = receive_all_client_packets(client_sockfd, reinterpret_cast<char*>(&msg_size), msg_size);
 
         recivedMessage.append(strRec);
     }
