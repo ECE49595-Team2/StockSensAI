@@ -1,0 +1,26 @@
+name: Frontend (Docker)
+
+on:
+  push:
+    branches: [ "development" ]
+  pull_request:
+    branches: [ "development" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Log in to GHCR
+      run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ECE49595-Team2 --password-stdin
+      
+    - name: Build the Docker image
+      run: docker build --file ./frontend/Dockerfile --tag ghcr.io/ECE49595-Team2/stocksensai-frontend:$(date +%s) ./frontend
+      
+    - name: Push the Docker image to GHPR
+      run: docker push ghcr.io/ECE49595-Team2/stocksensai-frontend:latest 
