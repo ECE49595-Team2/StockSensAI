@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  database:
+    image: couchdb:latest
+    restart: always
+    environment:
+      - COUCHDB_USER=stocksensai
+      - COUCHDB_PASSWORD=ComputerEngineersGoToClass
+    volumes:
+      - couchdb_data:/opt/couchdb/data
+    ports:
+      - "5984:5984"
+    networks:
+      - app_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  frontend:
+    image: stocksensai-frontend:latest
+    environment:
+      - NODE_ENV=development
+      - COUCHDB_URL=http://database:5984
+    ports:
+      - "3000:3000"
+    networks:
+      - app_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        
+  watchtower:
+    image: containrrr/watchtower
+    command: --interval 30 --cleanup --rollback
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  couchdb_data:
+
+networks:
+  app_network:
+    driver: overlay
