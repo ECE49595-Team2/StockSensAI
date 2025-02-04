@@ -20,7 +20,7 @@ jobs:
         run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ECE49595-Team2 --password-stdin
 
       - name: Build with Docker
-        run: docker build --file ./backend/llm-api/Dockerfile --tag ghcr.io/ece49595-team2/stocksensai-llm-server:$latest ./backend/llm-api/
+        run: docker build --file ./backend/llm-api/Dockerfile --tag ghcr.io/ece49595-team2/stocksensai-llm-server:latest ./backend/llm-api/
       
       - name: Push the Docker image to GHPR
         run: docker push ghcr.io/ece49595-team2/stocksensai-llm-server:latest
