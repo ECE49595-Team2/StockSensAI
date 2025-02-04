@@ -18,6 +18,7 @@ jobs:
 
     - name: Create .env File
       run: |
+        touch ./backend/algorithmic-trader/src/.env
         echo "API_KEY=${{ secrets.API_KEY }}" >> ./backend/algorithmic-trader/src/.env
         echo "API_SECRET=${{ secrets.API_SECRET }}" >> ./backend/algorithmic-trader/src/.env
 
