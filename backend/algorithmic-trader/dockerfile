@@ -1,0 +1,14 @@
+FROM python:3.10-slim
+WORKDIR /app
+
+# Install dependencies
+COPY backend/algorithmic-trader/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY backend/algorithmic-trader /app
+# Set the working directory to where the script is located
+WORKDIR /app/src
+# Read secrets at runtime and pass them as environment variables to Python
+CMD export ALPACA_API_KEY=$(cat /run/secrets/alpaca_api_key) && \
+    export ALPACA_SECRET_KEY=$(cat /run/secrets/alpaca_secret_key) && \
+    python trading_script.py
