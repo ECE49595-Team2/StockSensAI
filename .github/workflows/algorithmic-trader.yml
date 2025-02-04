@@ -26,7 +26,7 @@ jobs:
       run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ECE49595-Team2 --password-stdin
       
     - name: Build the Docker image
-      run: docker build --file ./backend/algorithmic-trader/Dockerfile --tag ghcr.io/ECE49595-Team2/stocksensai-algorithmic:latest ./backend/algorithmic-trader
+      run: docker build --file ./backend/algorithmic-trader/Dockerfile --tag ghcr.io/ece49595-team2/stocksensai-algorithmic:latest ./backend/algorithmic-trader
       
     - name: Push the Docker image to GHPR
-      run: docker push ghcr.io/ECE49595-Team2/stocksensai-algorithmic:latest
+      run: docker push ghcr.io/ece49595-team2/stocksensai-algorithmic:latest
