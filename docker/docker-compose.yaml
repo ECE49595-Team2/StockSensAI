@@ -1,4 +1,4 @@
-version: "0.1"
+version: "3.9"
 
 services:
   database:
@@ -18,28 +18,30 @@ services:
       restart_policy:
         condition: on-failure
 
-  nextjs:
-    image: node:18-alpine
-    build: 
-      context: ../frontend
-      dockerfile: Dockerfile
-    working_dir: /app
-    command: ["npm", "run", "dev"]
+  frontend:
+    image: stocksensai-frontend:latest
     environment:
       - NODE_ENV=development
-      - COUCHDB_URL=http://couchdb:5984
-    volumes:
-      - .:/app
-      - /app/node_modules
+      - COUCHDB_URL=http://database:5984
     ports:
       - "3000:3000"
-      - "9229:9229" # Debug port
     networks:
       - app_network
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
+        
+  watchtower:
+    image: containrrr/watchtower
+    command: --interval 30 --cleanup --rollback
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   couchdb_data:
