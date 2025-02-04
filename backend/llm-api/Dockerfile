@@ -1,5 +1,6 @@
 FROM gcc:latest
 
+# Set a working dir
 WORKDIR /server
 
 # Copy over the source code
