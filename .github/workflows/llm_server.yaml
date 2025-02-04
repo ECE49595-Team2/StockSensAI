@@ -3,7 +3,7 @@ name: LLM Server Docker CI
 on:
   push:
     paths:
-      - "backend/llm-api/."
+      - "backend/llm-api/**"
 
 jobs:
 
