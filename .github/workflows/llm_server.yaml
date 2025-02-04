@@ -13,4 +13,4 @@ jobs:
         
     steps:
       - name: Build with Docker
-        run: docker build -t stocksensai-llm-server backend/llm-api/
+        run: docker build -t stocksensai-llm-server backend/llm-api

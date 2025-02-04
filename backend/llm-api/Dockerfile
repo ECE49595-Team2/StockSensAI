@@ -1,3 +1,4 @@
+# Use latest cpp container
 FROM gcc:latest
 
 # Set a working dir
