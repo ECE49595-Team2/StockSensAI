@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
         
     steps:
-      - name: Test Path
-        run: ls /backend
+      - uses: actions/checkout@v4
+      
       - name: Build with Docker
         run: docker build -t stocksensai-llm-server backend/llm-api/*
