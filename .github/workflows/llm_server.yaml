@@ -1,4 +1,4 @@
-name: Deploy Package By Name to Lambda
+name: LLM Server Docker CI
 
 on:
   push:

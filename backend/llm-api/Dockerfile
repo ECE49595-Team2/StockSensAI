@@ -4,6 +4,6 @@ WORKDIR /server
 
 COPY ./src/* /server/
 
-RUN g++ -o main server_main.cpp
+RUN g++ -o server_main server_main.cpp
 
-CMD ["./main"]
+CMD ["./server_main"]
