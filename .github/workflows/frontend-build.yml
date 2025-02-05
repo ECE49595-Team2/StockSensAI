@@ -17,10 +17,10 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Log in to GHCR
-      run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ECE49595-Team2 --password-stdin
+      run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ece49595-team2 --password-stdin
       
     - name: Build the Docker image
-      run: docker build --file ./frontend/Dockerfile --tag ghcr.io/ECE49595-Team2/stocksensai-frontend:$(date +%s) ./frontend
+      run: docker build --file ./frontend/Dockerfile --tag ghcr.io/ece49595-Team2/stocksensai-frontend ./frontend
       
     - name: Push the Docker image to GHPR
-      run: docker push ghcr.io/ECE49595-Team2/stocksensai-frontend:latest 
+      run: docker push ghcr.io/ece49595-team2/stocksensai-frontend:latest 
