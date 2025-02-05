@@ -43,7 +43,7 @@ services:
         
   watchtower:
     image: containrrr/watchtower
-    command: --interval 30 --cleanup --rollback
+    command: --interval 30 --cleanup
     deploy:
       replicas: 1
       placement:
