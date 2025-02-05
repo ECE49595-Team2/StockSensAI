@@ -20,7 +20,7 @@ jobs:
       run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ece49595-team2 --password-stdin
       
     - name: Build the Docker image
-      run: docker build --file ./frontend/Dockerfile --tag ghcr.io/ece49595-Team2/stocksensai-frontend ./frontend
+      run: docker build --file ./frontend/Dockerfile --tag ghcr.io/ece49595-team2/stocksensai-frontend ./frontend
       
     - name: Push the Docker image to GHPR
       run: docker push ghcr.io/ece49595-team2/stocksensai-frontend:latest 
