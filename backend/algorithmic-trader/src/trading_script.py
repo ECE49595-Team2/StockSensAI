@@ -1,3 +1,5 @@
+#simple script to interact with alpaca and pull some account info
+
 from alpaca.trading.client import TradingClient
 import pandas as pd
 from alpaca.trading.requests import LimitOrderRequest,MarketOrderRequest
