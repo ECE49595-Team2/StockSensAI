@@ -4,12 +4,21 @@ import datetime
 import os
 from dotenv import load_dotenv
 import matplotlib.pyplot as plt
+from alpaca_trade_api.rest import APIError
 
 load_dotenv()
 
-# Alpaca API keys
-API_KEY = os.getenv("API_KEY")
-API_SECRET = os.getenv("API_SECRET")
+
+def read_secret(secret_name):
+    try:
+        with open(f"/run/secrets/{secret_name}") as secret_file:
+            return secret_file.read().strip()
+    except FileNotFoundError:
+        return os.getenv(secret_name.upper())
+
+
+API_KEY = read_secret("api_key")
+API_SECRET = read_secret("api_secret")
 BASE_URL = "https://paper-api.alpaca.markets"  # Use paper trading for testing
 
 # Create Alpaca API client
@@ -41,8 +50,11 @@ def generate_signals(df):
 
 
 def execute_trade(symbol, signal):
-    position = api.get_position(symbol)
-    qty = abs(int(float(position.qty))) if position else 0
+    try:
+        position = api.get_position(symbol)
+        qty = abs(int(float(position.qty)))
+    except APIError:
+        qty = 0
 
     if signal == 1:  # Buy
         if qty == 0:  # Only buy if no existing position
