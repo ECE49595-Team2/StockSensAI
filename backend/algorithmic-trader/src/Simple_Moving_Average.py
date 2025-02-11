@@ -1,6 +1,4 @@
 import alpaca_trade_api as tradeapi
-import pandas as pd
-import numpy as np
 import time
 import datetime
 import os
@@ -17,28 +15,30 @@ BASE_URL = "https://paper-api.alpaca.markets"  # Use paper trading for testing
 # Create Alpaca API client
 api = tradeapi.REST(API_KEY, API_SECRET, BASE_URL, api_version='v2')
 
+
 def get_historical_data(symbol, timeframe="1Day", days=100):
     """Fetch historical stock data from Alpaca API."""
     end_date = datetime.datetime.now().strftime('%Y-%m-%d')  # Convert to 'YYYY-MM-DD'
     start_date = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime('%Y-%m-%d')
 
     barset = api.get_bars(symbol, timeframe, start=start_date, end=end_date, feed="iex").df
-    
     if barset.empty:
         print("No data returned. Check your API access or symbol.")
-    
     return barset
+
 
 def calculate_moving_averages(df, short_window=20, long_window=50):
     df["SMA_Short"] = df["close"].rolling(window=short_window).mean()
     df["SMA_Long"] = df["close"].rolling(window=long_window).mean()
     return df
 
+
 def generate_signals(df):
     df["Signal"] = 0
     df.loc[df["SMA_Short"] > df["SMA_Long"], "Signal"] = 1  # Buy
     df.loc[df["SMA_Short"] < df["SMA_Long"], "Signal"] = -1  # Sell
     return df
+
 
 def execute_trade(symbol, signal):
     position = api.get_position(symbol)
@@ -54,6 +54,7 @@ def execute_trade(symbol, signal):
             api.submit_order(symbol=symbol, qty=qty, side="sell", type="market", time_in_force="gtc")
             print(f"Sold {symbol}")
 
+
 def run_strategy(symbol):
     while True:
         df = get_historical_data(symbol)
@@ -64,6 +65,7 @@ def run_strategy(symbol):
         execute_trade(symbol, latest_signal)
 
         time.sleep(60)  # Wait before checking again
+
 
 def SMA_visualizer():
     symbol = "AAPL"  # You can change this to any stock ticker
@@ -89,7 +91,6 @@ def SMA_visualizer():
     # Show plot
     plt.show()
 
+
 if __name__ == "__main__":
     run_strategy("AAPL")
-    #SMA_visualizer()
-    

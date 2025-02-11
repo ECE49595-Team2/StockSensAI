@@ -1,7 +1,6 @@
 import alpaca_trade_api as tradeapi
 import pandas as pd
 import matplotlib.pyplot as plt
-import datetime
 from dotenv import load_dotenv
 import os
 
@@ -15,15 +14,17 @@ BASE_URL = "https://paper-api.alpaca.markets"  # Use paper trading for testing
 # Initialize Alpaca API
 api = tradeapi.REST(API_KEY, API_SECRET, BASE_URL, api_version='v2')
 
+
 # Fetch historical data from Alpaca
 def get_data(symbol, start_date, end_date, timeframe='1Day'):
     """Fetch historical stock data from Alpaca API."""
     barset = api.get_bars(symbol, timeframe, start=start_date, end=end_date, feed="iex").df
-    
+
     if barset.empty:
         print("No data returned. Check your API access or symbol.")
-    
+
     return barset
+
 
 # Simple Moving Average Strategy (Same as before)
 def sma_strategy(df, short_window=20, long_window=50):
@@ -36,13 +37,14 @@ def sma_strategy(df, short_window=20, long_window=50):
 
     return df
 
+
 # Backtest the strategy (same logic)
 def backtest(df, initial_cash=100000):
     portfolio = pd.DataFrame(index=df.index)
     portfolio['Cash'] = initial_cash
     portfolio['Position'] = 0
     portfolio['Total'] = initial_cash
-    
+
     for i in range(1, len(df)):
         # Carry forward previous values if no trade occurs
         portfolio['Position'][i] = portfolio['Position'][i-1]
@@ -64,7 +66,7 @@ def backtest(df, initial_cash=100000):
 
 # Visualize the results
 def plot_results(df, portfolio):
-    plt.figure(figsize=(12,6))
+    plt.figure(figsize=(12, 6))
 
     plt.subplot(2, 1, 1)
     plt.plot(df['close'], label="Close Price")
@@ -77,9 +79,10 @@ def plot_results(df, portfolio):
     plt.plot(portfolio['Total'], label="Portfolio Value", color='green')
     plt.legend(loc="best")
     plt.title("Portfolio Value Over Time")
-    
+
     plt.tight_layout()
     plt.show()
+
 
 # Example usage with Alpaca data
 symbol = "AAPL"
