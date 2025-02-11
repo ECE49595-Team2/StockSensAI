@@ -6,6 +6,12 @@ FROM gcc:latest
 # Set a working dir
 WORKDIR /llm-api
 
+# Set env port
+ENV expPort=8011
+
+# Expose working port
+EXPOSE ${expPort}
+
 # Copy over the make file
 COPY ./Makefile /llm-api/Makefile
 
@@ -19,4 +25,4 @@ COPY ./include/* /llm-api/include/
 RUN make
 
 # Run the server
-CMD ["./llm_exec"]
+ENTRYPOINT ["sh", "-c", "./llm_exec $expPort"]
