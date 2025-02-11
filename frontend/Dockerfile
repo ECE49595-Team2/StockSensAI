@@ -13,9 +13,6 @@ RUN apk add --no-cache libc6-compat
 # Copy package.json and pnpm-lock.yaml first for better caching
 COPY package.json ./
 
-# Generate pnpm-lock.yaml inside the container if missing
-RUN [ -f pnpm-lock.yaml ] || pnpm install --lockfile-only
-
 # Install dependencies using PNPM
 RUN pnpm install --store-dir .pnpm-store
 
