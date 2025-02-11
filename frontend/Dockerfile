@@ -10,6 +10,9 @@ WORKDIR /app
 # Ensure required dependencies are available for Next.js
 RUN apk add --no-cache libc6-compat
 
+# Copy package.json and pnpm-lock.yaml first for better caching
+COPY package.json ./
+
 # Install dependencies using PNPM
 RUN pnpm install --store-dir .pnpm-store
 
