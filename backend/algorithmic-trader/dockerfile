@@ -6,6 +6,9 @@ WORKDIR /app
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
+RUN touch /app/src/.env
+RUN echo "API_KEY=${{ secrets.API_KEY }}" >> /app/src/.env
+RUN echo "API_SECRET=${{ secrets.API_SECRET }}" >> /app/src/.env
 
 COPY . /app
 
