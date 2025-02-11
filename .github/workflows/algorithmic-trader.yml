@@ -19,7 +19,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.9"
+        python-version: "3.9"  # Adjust Python version if needed
 
     - name: Install Dependencies
       run: |
@@ -45,5 +45,6 @@ jobs:
     - name: Build the Docker image
       run: docker build --file ./backend/algorithmic-trader/Dockerfile --tag ghcr.io/ece49595-team2/stocksensai-algorithmic:latest ./backend/algorithmic-trader
       
+    - name: Push the Docker image to GHCR
     - name: Push the Docker image to GHCR
       run: docker push ghcr.io/ece49595-team2/stocksensai-algorithmic:latest
