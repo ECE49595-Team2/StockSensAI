@@ -16,6 +16,22 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"  # Adjust Python version if needed
+
+    - name: Install Dependencies
+      run: |
+        pip install -r backend/algorithmic-trader/requirements.txt
+        pip install flake8 pytest
+
+    - name: Run Linter (Flake8)
+      run: flake8 backend/algorithmic-trader --count --select=E9,F63,F7,F82 --show-source --statistics
+
+    - name: Run Tests (Pytest)
+      run: pytest backend/algorithmic-trader/tests
+
     - name: Create .env File
       run: |
         mkdir -p ./backend/algorithmic-trader/src  # Ensure the directory exists
@@ -29,5 +45,5 @@ jobs:
     - name: Build the Docker image
       run: docker build --file ./backend/algorithmic-trader/Dockerfile --tag ghcr.io/ece49595-team2/stocksensai-algorithmic:latest ./backend/algorithmic-trader
       
-    - name: Push the Docker image to GHPR
+    - name: Push the Docker image to GHCR
       run: docker push ghcr.io/ece49595-team2/stocksensai-algorithmic:latest
