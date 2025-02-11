@@ -17,7 +17,7 @@ COPY package.json ./
 RUN [ -f pnpm-lock.yaml ] || pnpm install --lockfile-only
 
 # Install dependencies using PNPM
-RUN pnpm install --frozen-lockfile --store-dir .pnpm-store
+RUN pnpm install --store-dir .pnpm-store
 
 # Copy the rest of the application
 COPY . .

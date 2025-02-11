@@ -32,3 +32,6 @@ coverage/
 # Ignore temporary files
 *.tmp
 *.temp
+
+# Ignore pycache
+__pycache__

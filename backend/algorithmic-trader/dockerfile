@@ -1,0 +1,16 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /app
+
+# Set the working directory to where the script is located
+WORKDIR /app/src
+
+# Read secrets at runtime and pass them as environment variables to Python
+CMD ["python", "./trading_script.py"]
