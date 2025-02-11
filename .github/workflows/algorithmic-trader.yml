@@ -29,8 +29,8 @@ jobs:
 
     - name: Create Docker Swarm Secrets
       run: |
-      echo "${{ secrets.API_KEY }}" | docker secret create api_key -
-      echo "${{ secrets.API_SECRET }}" | docker secret create api_secret -
+        echo "${{ secrets.API_KEY }}" | docker secret create api_key -
+        echo "${{ secrets.API_SECRET }}" | docker secret create api_secret -
 
     - name: Run Linter (Flake8)
       run: flake8 backend/algorithmic-trader --count --select=E9,F63,F7,F82 --show-source --statistics
