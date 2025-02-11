@@ -27,12 +27,17 @@ jobs:
         pip install -r backend/algorithmic-trader/requirements.txt
         pip install flake8 pytest
 
+    - name: Create Docker Swarm Secrets
+      run: |
+      echo "${{ secrets.API_KEY }}" | docker secret create api_key -
+      echo "${{ secrets.API_SECRET }}" | docker secret create api_secret -
+
     - name: Run Linter (Flake8)
       run: flake8 backend/algorithmic-trader --count --select=E9,F63,F7,F82 --show-source --statistics
 
     - name: Run Tests (Pytest)
       run: pytest backend/algorithmic-trader/tests
-
+      
     - name: Log in to GHCR
       run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ECE49595-Team2 --password-stdin
       

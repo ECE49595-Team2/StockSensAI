@@ -9,9 +9,17 @@ import os
 
 load_dotenv()
 
-# get keys from .env file. Requires python-dotenv and alpaca account with generated key and secret
-ALPACA_API_KEY = os.getenv("API_KEY")
-ALPACA_API_SECRET = os.getenv("API_SECRET")
+
+def read_secret(secret_name):
+    try:
+        with open(f"/run/secrets/{secret_name}") as secret_file:
+            return secret_file.read().strip()
+    except FileNotFoundError:
+        return os.getenv(secret_name.upper())
+
+
+ALPACA_API_KEY = read_secret("api_key")
+ALPACA_API_SECRET = read_secret("api_secret")
 
 trading_client = TradingClient(
     api_key=ALPACA_API_KEY,

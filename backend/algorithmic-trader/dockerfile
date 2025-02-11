@@ -9,10 +9,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
-RUN touch /app/src/.env
-RUN echo "API_KEY=${{ secrets.API_KEY }}" >> /app/src/.env
-RUN echo "API_SECRET=${{ secrets.API_SECRET }}" >> /app/src/.env
-
 # Set the working directory to where the script is located
 WORKDIR /app/src
 

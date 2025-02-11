@@ -6,9 +6,17 @@ import os
 
 load_dotenv()
 
-# Alpaca API keys
-API_KEY = os.getenv("API_KEY")
-API_SECRET = os.getenv("API_SECRET")
+
+def read_secret(secret_name):
+    try:
+        with open(f"/run/secrets/{secret_name}") as secret_file:
+            return secret_file.read().strip()
+    except FileNotFoundError:
+        return os.getenv(secret_name.upper())
+
+
+API_KEY = read_secret("api_key")
+API_SECRET = read_secret("api_secret")
 BASE_URL = "https://paper-api.alpaca.markets"  # Use paper trading for testing
 
 # Initialize Alpaca API

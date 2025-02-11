@@ -34,8 +34,9 @@ services:
 
   algorithmic-trader:
     image: ghcr.io/ECE49595-Team2/stocksensai-algorithmic:latest
-    env_file:
-      - ./backend/algorithmic-trader/src/.env
+    secrets:
+      - api_key
+      - api_secret
     deploy:
       replicas: 1
       restart_policy:
