@@ -10,17 +10,8 @@ WORKDIR /app
 # Ensure required dependencies are available for Next.js
 RUN apk add --no-cache libc6-compat
 
-# Copy package.json and pnpm-lock.yaml first for better caching
-COPY package.json ./
-
-# Generate pnpm-lock.yaml inside the container if missing
-RUN [ -f pnpm-lock.yaml ] || pnpm install --lockfile-only
-
-# Copy pnpm-lock.yaml after it's generated (if missing)
-COPY pnpm-lock.yaml ./
-
 # Install dependencies using PNPM
-RUN pnpm install --frozen-lockfile --store-dir .pnpm-store
+RUN pnpm install --store-dir .pnpm-store
 
 # Copy the rest of the application
 COPY . .
