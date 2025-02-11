@@ -16,9 +16,6 @@ COPY package.json ./
 # Generate pnpm-lock.yaml inside the container if missing
 RUN [ -f pnpm-lock.yaml ] || pnpm install --lockfile-only
 
-# Copy pnpm-lock.yaml after it's generated (if missing)
-COPY pnpm-lock.yaml ./
-
 # Install dependencies using PNPM
 RUN pnpm install --frozen-lockfile --store-dir .pnpm-store
 
