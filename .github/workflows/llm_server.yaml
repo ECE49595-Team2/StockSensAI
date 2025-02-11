@@ -2,8 +2,9 @@ name: LLM Server (Docker)
 
 on:
   push:
-    paths:
-      - "backend/llm-api/**"
+    branches: [ "development" ]
+  pull_request:
+    branches: [ "development" ]
 
 jobs:
 

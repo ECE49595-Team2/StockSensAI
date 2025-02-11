@@ -1,43 +1,46 @@
 #include <sys/socket.h>
 #include <iostream>
-#include <string.h>
+#include <bits/stdc++.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <netinet/in.h>
 #include <unistd.h>
 
-using namespace std;
+#include "http_helper.h"
 
 #define LISTEN_QUEUE 50 /* Max outstanding connection requests; listen() param */
 
-ssize_t receive_all_client_packets(int sockfd, char* buffer, size_t length) {
-    size_t total_received = 0;
+void handle_request(int client_sockfd)
+{
+    char buffer[2048];
+    int numbytesRec = recv(client_sockfd, buffer, sizeof(buffer), 0);
 
-    while (total_received < length) {
-        ssize_t bytes_received = recv(sockfd, buffer + total_received, length - total_received, 0);
-
-        if (bytes_received == -1) {
-            perror("recv");
-            return -1;
-        }
-
-        if (bytes_received == 0) {
-            return total_received;  // Connection closed
-        }
-
-        total_received += bytes_received;
+    if (numbytesRec < 0) {
+        perror("recv");
+        exit(1);
     }
-    return total_received;
+
+    // Null-terminate the received data
+    buffer[numbytesRec] = '\0';
+
+    std::string request = std::string(buffer);
+
+    std::cout << "Recieved Request" << std::endl;
+
+    std::string response = generateServerResponse(request);
+
+    std::cout << response << std::endl;
+
+    send(client_sockfd, response.c_str(), response.length(), 0);
 }
 
 int main(int argc, char *argv[])
 {
     if (argc != 2) {
-        cout << "usage: ./llm_exec [server port]\n" << endl;
+        std::cout << "usage: ./llm_exec [server port]\n" << std::endl;
         exit(1);
     }
 
-    int servPortNumber = stoi(argv[1]); // convert to int
+    int servPortNumber = std::stoi(argv[1]); // convert to int
     int sockfd;
     int client_sockfd;
     struct sockaddr_in my_addr;
@@ -66,28 +69,26 @@ int main(int argc, char *argv[])
 		perror("listen");
 		exit(1);
 	}
-
-    char *strRec;
-    string recivedMessage;
-    ssize_t numbytesRec;
     
-    // Send
+    std::cout << "Listening on port " << servPortNumber << std::endl;
 
     // INFINITE LOOP FOR SERVER
     while (true)
     {
         sin_size = sizeof(struct sockaddr_in);
 
+        // Accept
 		if ((client_sockfd = accept(sockfd,
         (struct sockaddr *) &their_addr, &sin_size)) < 0) {
 			perror("accept");
 			continue;
 		}
 
-        size_t msg_size;
-        numbytesRec = receive_all_client_packets(client_sockfd, reinterpret_cast<char*>(&msg_size), msg_size);
-
-        recivedMessage.append(strRec);
+        // Go into request handling to keep things clean
+        handle_request(client_sockfd);
+        
+        // Close client fd
+        close(client_sockfd);
     }
 
     // Shutdown
