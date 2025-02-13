@@ -2,11 +2,6 @@ services:
   database:
     image: couchdb:latest
     restart: always
-    environment:
-      - COUCHDB_USER=stocksensai
-      - COUCHDB_PASSWORD=ComputerEngineersGoToClass
-      - COUCHDB_BIND_ADDRESS=0.0.0.0
-      - COUCHDB_SINGLE_NODE=true
     volumes:
       - couchdb_data:/opt/couchdb/data
       - ./couchdb_config/config.ini:/opt/couchdb/etc/local.ini
