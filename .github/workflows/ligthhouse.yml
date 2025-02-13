@@ -13,8 +13,9 @@ jobs:
       - name: Run Lighthouse and save report
         run: |
           # Run Lighthouse against stocksensai.com
-          docker run --rm --name lighthouse --cap-add=SYS_ADMIN femtopixel/google-lighthouse http://stocksensai.com --output json > lighthouse-report.json
-
+          docker run --rm --name lighthouse --cap-add=SYS_ADMIN femtopixel/google-lighthouse https://stocksensai.com --output json > lighthouse-report.json
+          cat lighthouse-report.json
+        
       - name: Check Lighthouse scores
         run: |
           # Check that all scores (converted to percentages) are at least 90
