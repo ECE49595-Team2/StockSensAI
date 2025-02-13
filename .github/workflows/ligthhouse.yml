@@ -1,0 +1,29 @@
+name: Lighthouse CI
+
+on:
+  push:
+    branches: [ "development" ]
+  pull_request:
+    branches: [ "development" ]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Lighthouse and save report
+        run: |
+          # Run Lighthouse against stocksensai.com
+          docker run --rm --name lighthouse --cap-add=SYS_ADMIN femtopixel/google-lighthouse https://stocksensai.com --output json > lighthouse-report.json
+          cat lighthouse-report.json
+        
+      - name: Check Lighthouse scores
+        run: |
+          # Check that all scores (converted to percentages) are at least 90
+          SCORE_CHECK=$(jq 'any(.categories[]; (.score * 100) < 90)' lighthouse-report.json)
+          echo "Score check result: $SCORE_CHECK"
+          if [ "$SCORE_CHECK" = "true" ]; then
+            echo "Error: One or more Lighthouse scores are below 90."
+            exit 1
+          else
+            echo "All Lighthouse scores are 90 or above."
+          fi
