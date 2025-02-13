@@ -21,7 +21,7 @@ services:
         condition: on-failure
 
   algorithmic-trader:
-    image: ghcr.io/ECE49595-Team2/stocksensai-algorithmic:latest
+    image: ghcr.io/ece49595-team2/stocksensai-algorithmic:latest
     env_file:
       - ./backend/algorithmic-trader/src/.env
     deploy:
@@ -43,6 +43,7 @@ services:
     command: --interval 30 --cleanup
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.docker/config.json:/root/.docker/config.json:ro
     restart: always
 
   nginx:
