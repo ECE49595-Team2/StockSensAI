@@ -29,5 +29,5 @@ EXPOSE 3000
 USER node
 
 # Start Next.js in development mode
-CMD ["pnpm", "run", "dev"]
+CMD ["pnpm", "run", "start"]
 
