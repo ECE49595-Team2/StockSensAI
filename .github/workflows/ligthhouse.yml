@@ -16,7 +16,7 @@ jobs:
           docker run --rm --name lighthouse --cap-add=SYS_ADMIN femtopixel/google-lighthouse https://stocksensai.com --output json > lighthouse-report.json
       
       - name: Upload Lighthouse Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lighthouse-report
           path: lighthouse-report.json
