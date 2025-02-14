@@ -27,17 +27,11 @@ struct HTTPResponse
 
 std::vector<std::string> split(std::string& s, std::string& del);
 
-HTTPMessage parseHTTPMessage(std::string& message);
+HTTPMessage parseHTTPMessage(const std::string& message);
 
 std::string contentTypeToString(ContentType contentType);
 std::string codeToString(int code);
 
-// Standard Methods
-void testGetPongResponse(HTTPResponse *response);
-void methodNotAllowedResponse(HTTPResponse *response);
-
 std::string formHTTPFullResponse(int code, ContentType contentType, const std::string& body);
-
-std::string generateServerResponse(const std::string &request);
 
 #endif

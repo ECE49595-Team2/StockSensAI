@@ -6,6 +6,8 @@
 #include <unistd.h>
 
 #include "http_helper.h"
+#include "api_helper.h"
+#include "response_format.h"
 
 #define LISTEN_QUEUE 50 /* Max outstanding connection requests; listen() param */
 
@@ -24,13 +26,40 @@ void handle_request(int client_sockfd)
 
     std::string request = std::string(buffer);
 
-    std::cout << "Recieved Request" << std::endl;
+    std::cout << "Recieved Request of length: " << numbytesRec << std::endl;
+    
+    // Setup parsing
+    HTTPMessage headerData;
+    HTTPResponse response;
 
-    std::string response = generateServerResponse(request);
+    headerData = parseHTTPMessage(request);
 
-    std::cout << response << std::endl;
+    if (headerData.method == "GET")
+    {
+        if (headerData.path == "/ping")
+        {
+            testGetPong(&response);
+        }
+        else if (headerData.path == "/testex")
+        {
+            std::string apiRes = callExternalApiPost("https://httpbin.org/get", "", "GET");
+            genericResponse(&response, 200, JSON, apiRes);
+        }
+    }
+    else if (headerData.method == "NULLFOR")
+    {
+        genericResponse(&response, 400, PLAIN_TEXT, "Bad Request");
+    }
+    else
+    {
+        methodNotAllowedResponse(&response);
+    }
 
-    send(client_sockfd, response.c_str(), response.length(), 0);
+    std::string strResponse = formHTTPFullResponse(response.code, response.contentType, response.body);
+
+    std::cout << strResponse << std::endl;
+
+    send(client_sockfd, strResponse.c_str(), strResponse.length(), 0);
 }
 
 int main(int argc, char *argv[])
