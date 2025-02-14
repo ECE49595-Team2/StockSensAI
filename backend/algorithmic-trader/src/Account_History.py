@@ -7,9 +7,18 @@ import matplotlib.ticker as mticker
 
 load_dotenv()
 
-# Alpaca API keys
-API_KEY = os.getenv("API_KEY")
-API_SECRET = os.getenv("API_SECRET")
+
+def read_secret(secret_name):
+    try:
+        with open(f"/run/secrets/{secret_name}") as secret_file:
+            return secret_file.read().strip()
+    except FileNotFoundError:
+        # .env for development
+        return os.getenv(secret_name.upper())
+
+
+API_KEY = read_secret("api_key")
+API_SECRET = read_secret("api_secret")
 BASE_URL = "https://paper-api.alpaca.markets"  # Use paper trading for testing
 
 
@@ -61,4 +70,4 @@ def plot_portfolio(period="1M", timeFrame="1D"):
 
 
 # Run the plot function
-plot_portfolio()
+plot_portfolio("1W", "1D")
