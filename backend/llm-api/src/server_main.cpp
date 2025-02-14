@@ -9,6 +9,10 @@
 #include "api_helper.h"
 #include "response_format.h"
 
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
 #define LISTEN_QUEUE 50 /* Max outstanding connection requests; listen() param */
 
 void handle_request(int client_sockfd)
@@ -46,9 +50,42 @@ void handle_request(int client_sockfd)
             genericResponse(&response, 200, JSON, apiRes);
         }
     }
+    else if (headerData.method == "POST")
+    {
+        if (headerData.path == "/testjson")
+        {
+            try
+            {
+                json requestJson = json::parse(headerData.body);
+
+                json responseJson = {
+                    {"status", "success"},
+                    {"received", requestJson}
+                };
+
+                genericResponse(&response, 200, JSON, responseJson.dump());
+            }
+            catch (const std::exception& e)
+            {
+                badRequestResponse(&response);
+            }
+        }
+        else if (headerData.path == "/testjsonapi")
+        {
+            json apiRes = json::parse(callExternalApiPost("https://httpbin.org/get", "", "GET"));
+
+            // Example extracting the ip from the test api field
+            json responseJson = {
+                {"status", "success"},
+                {"origin-ip", apiRes["origin"].get<std::string>()}
+            };
+
+            genericResponse(&response, 200, JSON, responseJson.dump());
+        }
+    }
     else if (headerData.method == "NULLFOR")
     {
-        genericResponse(&response, 400, PLAIN_TEXT, "Bad Request");
+        badRequestResponse(&response);
     }
     else
     {

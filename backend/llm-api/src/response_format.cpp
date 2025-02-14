@@ -16,3 +16,9 @@ void methodNotAllowedResponse(HTTPResponse *response)
 {
     genericResponse(response, 405, PLAIN_TEXT, "Method Not Allowed");
 }
+
+
+void badRequestResponse(HTTPResponse *response)
+{
+    genericResponse(response, 400, PLAIN_TEXT, "Bad Request");
+}
