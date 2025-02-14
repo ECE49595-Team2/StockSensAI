@@ -35,10 +35,10 @@ function MainSidebar() {
                         </Link>
                     </div>
                     {Object.keys(navigationItems).map((key: string) => (
-                        <div className="p-4">
+                        <div key={key} className="p-4">
                             <Separator />
                             <Link href={key}>
-                                <li key={key} onClick={() => setOpenMobile(false)}>
+                                <li onClick={() => setOpenMobile(false)}>
                                     {navigationItems[key].title}
                                 </li>
                             </Link>

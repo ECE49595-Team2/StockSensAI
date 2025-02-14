@@ -1,0 +1,36 @@
+services:
+  database:
+    image: couchdb:latest
+    ports:
+      - "5984:5984"
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: password
+    networks:
+      - test
+  
+  algorithmic-trader:
+      platform: linux/amd64
+      image: ghcr.io/ece49595-team2/stocksensai-algorithmic:latest
+      networks:
+        - test 
+      deploy:
+        replicas: 1
+        restart_policy:
+          condition: on-failure 
+
+  llm-server:
+    platform: linux/amd64
+    image: ghcr.io/ece49595-team2/stocksensai-llm-server:latest
+    networks:
+      - test
+    ports:
+      - "8011:8011"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+networks:
+  test:
+    attachable: true

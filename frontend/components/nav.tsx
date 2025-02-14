@@ -66,7 +66,7 @@ function Nav() {
                                             </div>
                                             <div key={key} className='w-1/2 h-full flex flex-col justify-center items-start text-sm font-bold p-2 text-black text-left underline gap-2'>
                                                 {Object.keys(navigationItems[key].subroutes).map((subkey: string) => (
-                                                    <Link href={subkey} className='hover:text-tertiary'>
+                                                    <Link key={subkey} href={subkey} className='hover:text-tertiary'>
                                                         <p>
                                                             {navigationItems[key].subroutes[subkey]}
                                                         </p>
