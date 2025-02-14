@@ -9,5 +9,6 @@ void genericResponse(HTTPResponse *response, int code, ContentType contentType, 
 // Standard Methods
 void testGetPong(HTTPResponse *response);
 void methodNotAllowedResponse(HTTPResponse *response);
+void badRequestResponse(HTTPResponse *response);
 
 #endif
