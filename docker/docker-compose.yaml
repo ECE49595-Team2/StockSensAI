@@ -22,6 +22,8 @@ services:
 
   algorithmic-trader:
     image: ghcr.io/ECE49595-Team2/stocksensai-algorithmic:latest
+    ports:
+      - "8000:8000"
     secrets:
       - api_key
       - api_secret

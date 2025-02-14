@@ -9,8 +9,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
-# Set the working directory to where the script is located
+# Set the working directory to where the server is located
 WORKDIR /app/src
 
-# Read secrets at runtime and pass them as environment variables to Python
-CMD ["python", "./trading_script.py"]
+# Expose port 8000 for FastAPI
+EXPOSE 8000
+
+# Run FastAPI using Uvicorn
+CMD ["uvicorn", "UI_Server_FastAPI:app", "--host", "0.0.0.0", "--port", "8000"]
