@@ -18,18 +18,27 @@ std::vector<std::string> split(const std::string& s, const std::string& del)
 
 HTTPMessage parseHTTPMessage(const std::string& message)
 {
-    std::vector<std::string> hb = split(message, "\r\n\r\n");
-
-    std::vector<std::string> header = split(hb[0], "\r\n");
-    
     HTTPMessage returnHeader;
 
-    returnHeader.body = hb[1];
+    if (message.find("\r\n\r\n") == std::string::npos)
+    {
+        returnHeader.method = "NULLFOR";
+        returnHeader.path = "";
+        returnHeader.body = "";
+    }
+    else
+    {
+        std::vector<std::string> hb = split(message, "\r\n\r\n");
 
-    std::vector<std::string> firstLine = split(header[0], " ");
+        std::vector<std::string> header = split(hb[0], "\r\n");
 
-    returnHeader.method = firstLine[0];
-    returnHeader.path = firstLine[1];
+        returnHeader.body = hb[1];
+
+        std::vector<std::string> firstLine = split(header[0], " ");
+
+        returnHeader.method = firstLine[0];
+        returnHeader.path = firstLine[1];
+    }
 
     return returnHeader;
 }
@@ -70,42 +79,7 @@ std::string codeToString(int code)
     }
 }
 
-void testGetPong(HTTPResponse *response)
-{
-    response->code = 200;
-    response->contentType = PLAIN_TEXT;
-    response->body = "Pong!";
-}
-
-void methodNotAllowedResponse(HTTPResponse *response)
-{
-    response->code = 405;
-    response->contentType = PLAIN_TEXT;
-    response->body = "Method Not Allowed";
-}
-
 std::string formHTTPFullResponse(int code, ContentType contentType, const std::string& body)
 {
     return "HTTP/1.1 " + std::to_string(code) + " " + codeToString(code) + "\r\nContent-Type: " + contentTypeToString(contentType) + "\r\nContent-Length: " + std::to_string(body.length()) + "\r\n\r\n" + body;
-}
-
-std::string generateServerResponse(const std::string& message)
-{
-    HTTPMessage headerData = parseHTTPMessage(message);
-
-    HTTPResponse response;
-
-    if (headerData.method == "GET")
-    {
-        if (headerData.path == "/ping")
-        {
-            testGetPong(&response);
-        }
-    }
-    else
-    {
-        methodNotAllowedResponse(&response);
-    }
-
-    return formHTTPFullResponse(response.code, response.contentType, response.body);
 }
