@@ -38,7 +38,6 @@ jobs:
       
     - name: Build the Docker image
       run: docker build --file ./backend/algorithmic-trader/Dockerfile --tag ghcr.io/ece49595-team2/stocksensai-algorithmic:latest ./backend/algorithmic-trader
-      
-    - name: Push the Docker image to GHCR
+
     - name: Push the Docker image to GHCR
       run: docker push ghcr.io/ece49595-team2/stocksensai-algorithmic:latest
