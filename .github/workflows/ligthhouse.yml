@@ -1,0 +1,35 @@
+name: Lighthouse CI
+
+on:
+  push:
+    branches: [ "development" ]
+  pull_request:
+    branches: [ "development" ]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Lighthouse and save report
+        run: |
+          # Run Lighthouse against stocksensai.com
+          docker run --rm --name lighthouse --cap-add=SYS_ADMIN femtopixel/google-lighthouse https://stocksensai.com --output json > lighthouse-report.json
+      
+      - name: Upload Lighthouse Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: lighthouse-report.json
+        
+      - name: Check Lighthouse scores
+        run: |
+          # Extract names of categories with scores below 90 and their scores in percentage
+          FAILED_CATEGORIES=$(jq -r '.categories | to_entries[] | select(.value.score * 100 < 90) | "\(.key | ascii_upcase): \(.value.score * 100)%"' lighthouse-report.json)
+          
+          if [ -n "$FAILED_CATEGORIES" ]; then
+            echo -e "\033[1mError: The following Lighthouse categories scored below 90%:\033[0m"
+            echo -e "\n\033[1m$FAILED_CATEGORIES\033[0m"
+            exit 1
+          else
+            echo "All Lighthouse scores are 90 or above."
+          fi
