@@ -1,22 +1,6 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import Nav from "@/components/nav";
 import "./globals.css";
-
-const primary = localFont({
-  src: "./fonts/AntonSC-Regular.ttf",
-  variable: "--font-primary"
-});
-
-const secondary = localFont({
-  src: "./fonts/GeistMono-Medium.ttf",
-  variable: "--font-secondary"
-});
-
-export const fonts = {
-  primary,
-  secondary,
-};
 
 
 export const metadata: Metadata = {
@@ -32,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${secondary.className} antialiased`}
+        className={'antialiased'}
       >
         <Nav />
         {children}
