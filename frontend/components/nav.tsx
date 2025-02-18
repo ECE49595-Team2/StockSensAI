@@ -23,8 +23,6 @@ function Nav() {
 
     const [scrollY, setScrollY] = useState(window.scrollY / 100);
 
-    console.log(navigationItems['/about'].subroutes);
-
     useEffect(() => {
         const handleScroll = () => {
             setScrollY(window.scrollY / 100);
@@ -58,7 +56,7 @@ function Nav() {
                         {
                             Object.keys(navigationItems).map((key: string) => (
                                 <NavigationMenuItem key={key}>
-                                    <NavigationMenuTrigger>
+                                    <NavigationMenuTrigger key={key}>
                                         {navigationItems[key].title}
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
@@ -66,7 +64,7 @@ function Nav() {
                                             <div className='w-1/2 h-full flex flex-col justify-center items-center bg-primary rounded text-white text-lg font-bold p-2'>
                                                 {navigationItems[key].description}
                                             </div>
-                                            <div className='w-1/2 h-full flex flex-col justify-center items-start text-sm font-bold p-2 text-black text-left underline gap-2'>
+                                            <div key={key} className='w-1/2 h-full flex flex-col justify-center items-start text-sm font-bold p-2 text-black text-left underline gap-2'>
                                                 {Object.keys(navigationItems[key].subroutes).map((subkey: string) => (
                                                     <Link href={subkey} className='hover:text-tertiary'>
                                                         <p>

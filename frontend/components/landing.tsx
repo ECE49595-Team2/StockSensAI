@@ -8,7 +8,7 @@ function Landing() {
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger>
-                        <Image src="/Samurai icon.png" alt="Samurai icon" width={300} height={300} />
+                        <Image src="/Samurai icon.png" alt="Samurai icon" width={300} height={300} priority/>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>image: Flaticon.com</p>
