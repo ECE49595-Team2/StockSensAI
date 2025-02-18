@@ -12,8 +12,8 @@ const NavigationItems = {
         title: 'Developers',
         description: 'Developer resources',
         subroutes: {
-            'https://github.com': "Repository",
-            'https://github.com/docs': "Documentation",
+            'https://github.com/ECE49595-Team2/StockSensAI': "Repository",
+            'http://localhost:3000/attributions.html': "Attributions",
         }
     }
 }

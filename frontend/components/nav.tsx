@@ -21,9 +21,11 @@ const navigationItems: NavigationItemsType = NavigationItems;
 
 function Nav() {
 
-    const [scrollY, setScrollY] = useState(window.scrollY / 100);
+    const [scrollY, setScrollY] = useState(0);
 
     useEffect(() => {
+        setScrollY(window.scrollY / 100);
+
         const handleScroll = () => {
             setScrollY(window.scrollY / 100);
         };
