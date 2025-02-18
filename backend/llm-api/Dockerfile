@@ -21,8 +21,15 @@ COPY ./src/* /llm-api/src/
 # Copy over the headers
 COPY ./include/* /llm-api/include/
 
+# Install any 3rd party packages
+RUN apt update
+RUN apt install nlohmann-json3-dev
+
+# Create build dir
+RUN mkdir /llm-api/build/
+
 # Compile
 RUN make
 
 # Run the server
-ENTRYPOINT ["sh", "-c", "./llm_exec $expPort"]
+ENTRYPOINT ["sh", "-c", "./build/llm_exec $expPort"]

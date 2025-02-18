@@ -6,6 +6,12 @@
 #include <unistd.h>
 
 #include "http_helper.h"
+#include "api_helper.h"
+#include "response_format.h"
+
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 #define LISTEN_QUEUE 50 /* Max outstanding connection requests; listen() param */
 
@@ -24,13 +30,73 @@ void handle_request(int client_sockfd)
 
     std::string request = std::string(buffer);
 
-    std::cout << "Recieved Request" << std::endl;
+    std::cout << "Recieved Request of length: " << numbytesRec << std::endl;
+    
+    // Setup parsing
+    HTTPMessage headerData;
+    HTTPResponse response;
 
-    std::string response = generateServerResponse(request);
+    headerData = parseHTTPMessage(request);
 
-    std::cout << response << std::endl;
+    if (headerData.method == "GET")
+    {
+        if (headerData.path == "/ping")
+        {
+            testGetPong(&response);
+        }
+        else if (headerData.path == "/testex")
+        {
+            std::string apiRes = callExternalApiPost("https://httpbin.org/get", "", "GET");
+            genericResponse(&response, 200, JSON, apiRes);
+        }
+    }
+    else if (headerData.method == "POST")
+    {
+        if (headerData.path == "/testjson")
+        {
+            try
+            {
+                json requestJson = json::parse(headerData.body);
 
-    send(client_sockfd, response.c_str(), response.length(), 0);
+                json responseJson = {
+                    {"status", "success"},
+                    {"received", requestJson}
+                };
+
+                genericResponse(&response, 200, JSON, responseJson.dump());
+            }
+            catch (const std::exception& e)
+            {
+                badRequestResponse(&response);
+            }
+        }
+        else if (headerData.path == "/testjsonapi")
+        {
+            json apiRes = json::parse(callExternalApiPost("https://httpbin.org/get", "", "GET"));
+
+            // Example extracting the ip from the test api field
+            json responseJson = {
+                {"status", "success"},
+                {"origin-ip", apiRes["origin"].get<std::string>()}
+            };
+
+            genericResponse(&response, 200, JSON, responseJson.dump());
+        }
+    }
+    else if (headerData.method == "NULLFOR")
+    {
+        badRequestResponse(&response);
+    }
+    else
+    {
+        methodNotAllowedResponse(&response);
+    }
+
+    std::string strResponse = formHTTPFullResponse(response.code, response.contentType, response.body);
+
+    std::cout << strResponse << std::endl;
+
+    send(client_sockfd, strResponse.c_str(), strResponse.length(), 0);
 }
 
 int main(int argc, char *argv[])
