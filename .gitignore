@@ -3,7 +3,6 @@ node_modules/
 frontend/pnpm-lock.yaml
 
 # Ignore test files
-*.test.yaml
 test/
 
 # Ignore log files
