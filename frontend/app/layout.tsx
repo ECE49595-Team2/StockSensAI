@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Head from "next/head";
 import Nav from "@/components/nav";
 import "./globals.css";
+import { SidebarInset, SidebarProvider } from "@/shadcn/ui/sidebar";
+import MainSidebar from "@/components/sidebar";
 
 
 export const metadata: Metadata = {
@@ -15,11 +18,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <Head>
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       <body
-        className={'antialiased'}
+        className={'antialiased text-white'}
       >
-        <Nav />
-        {children}
+        <SidebarProvider defaultOpen={false}>
+          <MainSidebar />
+          <SidebarInset>
+            <Nav />
+            <article className="flex-1">
+              {children}
+            </article>
+          </SidebarInset>
+        </SidebarProvider>
       </body>
     </html>
   );
