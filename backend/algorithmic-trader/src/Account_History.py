@@ -9,16 +9,11 @@ load_dotenv()
 
 
 def read_secret(secret_name):
-    try:
-        with open(f"/run/secrets/{secret_name}") as secret_file:
-            return secret_file.read().strip()
-    except FileNotFoundError:
-        # .env for development
-        return os.getenv(secret_name.upper())
+    return os.environ.get(secret_name.upper(), os.getenv(secret_name.upper()))
 
 
-API_KEY = read_secret("api_key")
-API_SECRET = read_secret("api_secret")
+API_KEY = read_secret("alpaca_api_key")
+API_SECRET = read_secret("alpaca_api_secret")
 BASE_URL = "https://paper-api.alpaca.markets"  # Use paper trading for testing
 
 
