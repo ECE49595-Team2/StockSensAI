@@ -1,7 +1,7 @@
 import { Button } from "@/shadcn/ui/button";
 import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@/shadcn/ui/tooltip";
 import Image from "next/image";
-import SamuraiIcon from "@/public/Samurai icon.png";
+import SamuraiIcon from "@/public/Samurai Icon.png";
 
 function Landing() {
     return (

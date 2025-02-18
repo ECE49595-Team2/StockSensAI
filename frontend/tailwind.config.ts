@@ -2,7 +2,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-    darkMode: ["class"],
+	darkMode: ["class", "[data-theme='dark']"],
     content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -32,7 +32,7 @@ const config: Config = {
   				foreground: 'var(--primary-foreground)'
   			},
   			secondary: {
-  				DEFAULT: 'var(--secondary))',
+  				DEFAULT: 'var(--secondary)',
   				foreground: 'var(--secondary-foreground)'
   			},
   			muted: {
