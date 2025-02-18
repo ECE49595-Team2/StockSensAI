@@ -6,6 +6,7 @@ import { SidebarTrigger } from '@/shadcn/ui/sidebar';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import Logo from '@/public/logo.png';
 
 type NavigationItemsType = {
     [key: string]: {
@@ -38,12 +39,12 @@ function Nav() {
     }, []);
 
     return (
-        <nav className={`flex flex-row justify-around items-center p-4 fixed w-full z-50 h-[150px] transition-all duration-10 backdrop-blur-lg ${scrollY >= 0.5 ? 'shadow-lg' : ''}`} style={{ backgroundColor: `rgba(61, 43, 86, ${scrollY >= 0.5 ? 0.5 : scrollY})` }}>
+        <nav className={`flex flex-row justify-start sm:justify-around items-center p-4 fixed w-full z-50 h-[7rem] transition-all duration-10 backdrop-blur-lg ${scrollY >= 0.5 ? 'shadow-lg' : ''}`} style={{ backgroundColor: `rgba(61, 43, 86, ${scrollY >= 0.5 ? 0.5 : scrollY})` }}>
             <SidebarTrigger size={'icon'} className='sm:hidden flex' />
             <Link href='/'>
-                <div id="logo" className={`flex flex-row gap-2 items-center font-anton text-2xl select-none`}>
+                <div id="logo" className={`flex flex-row gap-2 items-center font-anton text-xl select-none`}>
 
-                    <Image src="/logo.svg" alt="logo" width={100} height={100} draggable={false} />
+                    <Image src={Logo} alt="logo" width={100} height={100} draggable={false} />
                     <h1>
                         <span className='text-primary'>Stock</span>
                         <span className='text-secondary'>Sens</span>
@@ -62,11 +63,11 @@ function Nav() {
                                         {navigationItems[key].title}
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
-                                        <div className='h-[150px] w-[300px] p-2 flex flex-row gap-2'>
-                                            <div className='w-1/2 h-full flex flex-col justify-center items-center bg-primary rounded text-white text-lg font-bold p-2'>
+                                        <div className='h-[7rem] w-[max-content] p-2 flex flex-row gap-2'>
+                                            <div className='w-[50%] h-full flex flex-col justify-center items-center bg-primary rounded text-white text-lg font-bold p-4 border-box text-wrap'>
                                                 {navigationItems[key].description}
                                             </div>
-                                            <div key={key} className='w-1/2 h-full flex flex-col justify-center items-start text-sm font-bold p-2 text-black text-left underline gap-2'>
+                                            <div key={key} className='w-[max-content] h-[max-content] flex flex-col justify-center items-start text-sm font-bold p-2 text-black text-left underline gap-2'>
                                                 {Object.keys(navigationItems[key].subroutes).map((subkey: string) => (
                                                     <Link key={subkey} href={subkey} className='hover:text-tertiary'>
                                                         <p>
@@ -83,7 +84,7 @@ function Nav() {
                     </NavigationMenuList>
                 </NavigationMenu>
             </div>
-            <div id="getStarted">
+            <div id="getStarted" className='hidden sm:flex'>
                 <Button variant={"default"}>Get Started</Button>
             </div>
         </nav>

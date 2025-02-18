@@ -3,6 +3,7 @@ import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from "@/shadcn/ui/
 import NavigationItems from "@/app/nav-items";
 import Link from "next/link";
 import { Separator } from "@/shadcn/ui/separator";
+import { Button } from "@/shadcn/ui/button";
 
 const navigationItems: NavigationItemsType = NavigationItems;
 
@@ -46,6 +47,9 @@ function MainSidebar() {
                     ))
                     }
                 </ul>
+                <div className="p-4 w-full flex justify-center">
+                    <Button variant="default">Get Started</Button>
+                </div>
             </SidebarContent>
         </Sidebar>
     )

@@ -1,9 +1,11 @@
+import Page from "@/components/new-page";
+
 function TutorialPage() {
     return (
-        <div>
-            <h1>Tutorial</h1>
+        <Page className="p-4 font-geist-mono">
+            <h1 className="font-anton text-5xl font-bold">Tutorial</h1>
             <p>This is the tutorial page.</p>
-        </div>
+        </Page>
     );
 }
 

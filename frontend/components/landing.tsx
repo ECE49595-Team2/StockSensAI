@@ -1,14 +1,15 @@
 import { Button } from "@/shadcn/ui/button";
 import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@/shadcn/ui/tooltip";
 import Image from "next/image";
+import SamuraiIcon from "@/public/Samurai icon.png";
 
 function Landing() {
     return (
-        <div className="h-screen w-screen flex flex-col gap-5 items-center justify-center bg-gradient-to-t from-purple-800 to-purple-1200">
+        <div className="flex-1 min-h-[calc(100svh_-_7rem)] w-screen flex flex-col gap-5 items-center justify-center bg-gradient-to-t from-purple-800 to-purple-1200 p-4">
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger>
-                        <Image src="/Samurai icon.png" alt="Samurai icon" width={300} height={300} priority/>
+                        <Image src={SamuraiIcon} alt="Samurai icon" width={300} height={300} priority/>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>image: Flaticon.com</p>

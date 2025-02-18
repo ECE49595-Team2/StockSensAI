@@ -1,10 +1,11 @@
 import Block from "@/components/block";
 import Footer from "@/components/footer";
 import Landing from "@/components/landing";
+import Page from "@/components/new-page";
 
 export default function Home() {
   return (
-    <div>
+    <Page>
       <Landing />
       <Block
         title="Learn the ways of the stock market"
@@ -22,6 +23,6 @@ export default function Home() {
        content="With sentiment analysis, StockSensAI can help you determine which stocks are worth buying, and which ones are worth selling."
       />
       <Footer />
-    </div>
+    </Page>
   );
 }

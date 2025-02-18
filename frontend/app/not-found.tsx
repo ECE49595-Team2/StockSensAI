@@ -9,7 +9,7 @@ function NotFound() {
     };
 
     return (
-        <div className="pt-[150px] h-screen w-screen flex flex-col justify-center items-center">
+        <div className="pt-[7rem] h-screen w-screen flex flex-col justify-center items-center p-4">
             <div className="flex flex-col gap-5">
                 <div className="h-[max-content] width-[max-content] flex flex-row justify-center items-center gap-5 relative z-10">
                     <h1 className="text-3xl">Woahhh!</h1>

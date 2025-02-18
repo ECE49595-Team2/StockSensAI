@@ -1,6 +1,11 @@
-function Page({ children }: Readonly<{ children: React.ReactNode }>) {
+interface PageProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+function Page({ children, className }: PageProps) {
   return (
-    <div className="pt-[170px] p-12 flex flex-col gap-4">
+    <div className={`pt-[7rem] flex flex-col gap-4 border-box w-screen ${className}`}>
       {children}
     </div>
   );
