@@ -2,8 +2,8 @@ export async function GET() {
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
         <url>
-            <loc>https://yourdomain.com/</loc>
-            <lastmod>${new Date().toISOString()}</lastmod>
+            <loc>https://stocksensai.com/</loc>
+            <lastmod>02/18/2025</lastmod>
         </url>
     </urlset>`;
   

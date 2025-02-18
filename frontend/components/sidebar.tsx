@@ -1,9 +1,9 @@
 "use client";
-import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from "@/shadcn/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarHeader, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, useSidebar } from "@/shadcn/ui/sidebar";
 import NavigationItems from "@/app/nav-items";
-import Link from "next/link";
 import { Separator } from "@/shadcn/ui/separator";
 import { Button } from "@/shadcn/ui/button";
+import { useRouter } from "next/navigation";
 
 const navigationItems: NavigationItemsType = NavigationItems;
 
@@ -11,12 +11,21 @@ interface NavigationItemsType {
     [key: string]: {
         title: string;
         description: string;
+        subroutes: {
+            [key: string]: string;
+        }
     };
 }
 
 function MainSidebar() {
 
     const { setOpenMobile } = useSidebar();
+    const navigator = useRouter();
+
+    const navigate = (url: string) => () => {
+        setOpenMobile(false);
+        navigator.push(url);
+    }
 
     return (
         <Sidebar variant="floating" collapsible="offcanvas">
@@ -29,20 +38,30 @@ function MainSidebar() {
                 <ul>
                     <div className="p-4">
                         <Separator />
-                        <Link href="/">
-                            <li onClick={() => setOpenMobile(false)}>
-                                Home
-                            </li>
-                        </Link>
+
+                        <SidebarMenuButton size={'lg'} onClick={navigate('/')}>
+                            Home
+                        </SidebarMenuButton>
+
                     </div>
                     {Object.keys(navigationItems).map((key: string) => (
                         <div key={key} className="p-4">
                             <Separator />
-                            <Link href={key}>
-                                <li onClick={() => setOpenMobile(false)}>
-                                    {navigationItems[key].title}
-                                </li>
-                            </Link>
+                            <SidebarMenuItem>
+                                <p className="text-sm">{navigationItems[key].title}</p>
+                            </SidebarMenuItem>
+                            <SidebarMenuSub key={key}>
+
+                                {Object.keys(navigationItems[key].subroutes).map((subkey: string) => (
+                                    <SidebarMenuSubItem key={subkey}>
+
+                                        <SidebarMenuSubButton size="md" onClick={navigate(subkey)}>
+                                            {navigationItems[key].subroutes[subkey]}
+                                        </SidebarMenuSubButton>
+
+                                    </SidebarMenuSubItem>
+                                ))}
+                            </SidebarMenuSub>
                         </div>
                     ))
                     }

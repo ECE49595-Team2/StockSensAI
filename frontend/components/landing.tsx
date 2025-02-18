@@ -9,7 +9,7 @@ function Landing() {
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger>
-                        <Image src={SamuraiIcon} alt="Samurai icon" width={300} height={300} priority/>
+                        <Image src={SamuraiIcon} alt="Samurai icon" width={300} height={300} priority draggable={false} className="select-none pointer-events-none"/>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>image: Flaticon.com</p>
