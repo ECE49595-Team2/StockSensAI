@@ -24,5 +24,3 @@ def post_portfolio_history(data: PortfolioHistoryData):
         "data_points": get_portfolio_history(data.period, data.timeframe)
     }
     return response
-
-
