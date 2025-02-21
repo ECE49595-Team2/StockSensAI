@@ -46,8 +46,18 @@ void handle_request(int client_sockfd)
         }
         else if (headerData.path == "/testex")
         {
-            std::string apiRes = callExternalApiPost("https://httpbin.org/get", "", "GET");
+            std::string apiRes = callExternalApiPost("https://httpbin.org/get");
             genericResponse(&response, 200, JSON, apiRes);
+        }
+        else if (headerData.path == "/testopenrouterapi")
+        {
+            json responseJson = getLlamaPong();
+
+            genericResponse(&response, 200, JSON, responseJson.dump());
+        }
+        else
+        {
+            badRequestResponse(&response);
         }
     }
     else if (headerData.method == "POST")
@@ -72,7 +82,7 @@ void handle_request(int client_sockfd)
         }
         else if (headerData.path == "/testjsonapi")
         {
-            json apiRes = json::parse(callExternalApiPost("https://httpbin.org/get", "", "GET"));
+            json apiRes = json::parse(callExternalApiPost("https://httpbin.org/get"));
 
             // Example extracting the ip from the test api field
             json responseJson = {
@@ -91,6 +101,10 @@ void handle_request(int client_sockfd)
             json responseJson = getPolygonNews(ticker);
 
             genericResponse(&response, 200, JSON, responseJson.dump());
+        }
+        else
+        {
+            badRequestResponse(&response);
         }
     }
     else if (headerData.method == "NULLFOR")
