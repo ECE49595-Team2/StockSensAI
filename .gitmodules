@@ -1,3 +1,0 @@
-[submodule "backend/llm-api/external/cppdotenv"]
-	path = backend/llm-api/external/cppdotenv
-	url = https://github.com/adeharo9/cpp-dotenv.git

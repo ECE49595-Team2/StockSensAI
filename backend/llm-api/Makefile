@@ -14,7 +14,7 @@ ALL_INC=$(wildcard include/.)
 APP=build/llm_exec
 
 custom_tests:
-	$(CC) $(CFLAGS) -I $(ALL_INC) $(ALL_SRC) $(EXTL) -o $(APP)	
+	$(CC) $(CFLAGS) -I $(ALL_INC) -I $(DOTENV_INC) $(ALL_SRC) $(DOTENV_SRC) $(EXTL) -o $(APP)	
 
 clean:
 	rm -f $(APP)

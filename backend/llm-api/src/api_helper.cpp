@@ -1,7 +1,5 @@
 #include "api_helper.h"
 
-#include <iostream>
-
 size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp) 
 {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -51,7 +49,9 @@ std::string callExternalApiPost(const std::string& url, const std::string& body,
         if (res != CURLE_OK) 
         {
             //error
-            std::cout << "ERROR: " << curl_easy_strerror(res) << std::endl;
+            //std::cout << "ERROR: " << curl_easy_strerror(res) << std::endl;
+
+            return NULL;
         }
         else 
         {
@@ -67,4 +67,63 @@ std::string callExternalApiPost(const std::string& url, const std::string& body,
     curl_global_cleanup();
 
     return readBuffer;
+}
+
+std::string getEnvVar(const std::string& key)
+{
+    char *val = getenv(key.c_str());
+
+    // If null we return the empty string
+    if (!val)
+    {
+        return NULL;
+    }
+    else
+    {
+        std::string(val);
+    }
+}
+
+json getPolygonNews(const std::string& ticker)
+{
+    std::string polygonKey = getEnvVar("POLYGON_API_KEY");
+
+    std::cout << "API KEY: " << polygonKey << std::endl;
+
+    // Return Null if there is no proper key enviorment variable
+    if (polygonKey == "")
+    {
+        return NULL;
+    }
+
+    // Call the get api with ticker and api key authentication
+    std::string apiRes = callExternalApiPost("https://api.polygon.io/v2/reference/news?ticker=" + ticker + "&limit=10&apiKey=" + polygonKey, "", "GET");
+
+    // Parse the Json
+    json apiJson = json::parse(apiRes);
+
+    // get the articles
+    json articles = apiJson["results"];
+
+    json responseJson;
+
+    // Lets use a test sentiment list for our ticker symbol
+    std::vector<std::string> sentiments;
+
+    for (int i = 0; i < articles.size(); i++)
+    {
+        json insights = articles[i]["insights"];
+
+        for (int j = 0; j < insights.size(); j++)
+        {
+            if (insights[j]["ticker"] == ticker)
+            {
+                sentiments.push_back(insights[j]["sentiment"]);
+            }
+        }
+    }
+
+    responseJson["sentiments"] = sentiments;
+
+    return responseJson;
 }

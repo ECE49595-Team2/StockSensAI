@@ -82,6 +82,16 @@ void handle_request(int client_sockfd)
 
             genericResponse(&response, 200, JSON, responseJson.dump());
         }
+        else if (headerData.path == "/testpolygonapi")
+        {
+            std::string ticker = json::parse(headerData.body)["ticker"];
+
+            std::cout << ticker << std::endl;
+
+            json responseJson = getPolygonNews(ticker);
+
+            genericResponse(&response, 200, JSON, responseJson.dump());
+        }
     }
     else if (headerData.method == "NULLFOR")
     {
