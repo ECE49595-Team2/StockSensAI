@@ -69,24 +69,11 @@ std::string callExternalApiPost(const std::string& url, const std::string& body,
     return readBuffer;
 }
 
-std::string getEnvVar(const std::string& key)
-{
-    char *val = getenv(key.c_str());
-
-    // If null we return the empty string
-    if (!val)
-    {
-        return NULL;
-    }
-    else
-    {
-        std::string(val);
-    }
-}
-
 json getPolygonNews(const std::string& ticker)
 {
-    std::string polygonKey = getEnvVar("POLYGON_API_KEY");
+    dotenv::init();
+
+    std::string polygonKey = getenv("POLYGON_API_KEY");
 
     std::cout << "API KEY: " << polygonKey << std::endl;
 
@@ -110,11 +97,11 @@ json getPolygonNews(const std::string& ticker)
     // Lets use a test sentiment list for our ticker symbol
     std::vector<std::string> sentiments;
 
-    for (int i = 0; i < articles.size(); i++)
+    for (size_t i = 0; i < articles.size(); i++)
     {
         json insights = articles[i]["insights"];
 
-        for (int j = 0; j < insights.size(); j++)
+        for (size_t j = 0; j < insights.size(); j++)
         {
             if (insights[j]["ticker"] == ticker)
             {
