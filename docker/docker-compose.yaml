@@ -34,6 +34,8 @@ services:
   
   llm-server:
     image: ghcr.io/ece49595-team2/stocksensai-llm-server:latest
+    environment: 
+      - POLYGON_API_KEY=${POLYGON_API_KEY}
     ports:
       - "8011:8011"
     deploy:
