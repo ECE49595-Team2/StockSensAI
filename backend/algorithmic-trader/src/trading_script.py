@@ -33,20 +33,23 @@ class Util:
         return pd.DataFrame(data, columns=['tag', 'value']).set_index('tag')
 
 
-print("ACCOUNT INFO:\n", Util.to_dataframe(trading_client.get_account()), "\n")
+def buy_stock(ticker, quantity):
+    order_data = MarketOrderRequest(
+            symbol=ticker,
+            qty=quantity,
+            side=OrderSide.BUY,
+            time_in_force=TimeInForce.DAY)
 
-positions = trading_client.get_all_positions()
+    market_order = trading_client.submit_order(order_data=order_data)
+    return market_order
 
-print("POSITIONS:\n", Util.to_dataframe(positions), "\n")
 
-order_data = MarketOrderRequest(
-        symbol='NVDA',
-        qty=0.5,
-        side=OrderSide.BUY,
-        time_in_force=TimeInForce.DAY)
+def sell_stock(ticker, quantity):
+    order_data = MarketOrderRequest(
+            symbol=ticker,
+            qty=quantity,
+            side=OrderSide.SELL,
+            time_in_force=TimeInForce.DAY)
 
-# market_order = trading_client.submit_order(order_data=order_data)
-
-orders = trading_client.get_orders()
-
-print("ORDERS:\n", Util.to_dataframe(orders))
+    market_order = trading_client.submit_order(order_data=order_data)
+    return market_order
