@@ -15,6 +15,9 @@ EXPOSE ${expPort}
 # Copy over the make file
 COPY ./Makefile /llm-api/Makefile
 
+# Copy over the env
+COPY ./.env /llm-api/.env
+
 # Copy over the source code
 COPY ./src/* /llm-api/src/
 
