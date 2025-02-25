@@ -32,6 +32,8 @@ services:
     image: ghcr.io/ece49595-team2/stocksensai-llm-server:latest
     networks:
       - manager_internal
+    environment: 
+      - POLYGON_API_KEY=${POLYGON_API_KEY}
     ports:
       - "8011:8011"
     deploy:
