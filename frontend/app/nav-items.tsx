@@ -13,7 +13,7 @@ const NavigationItems = {
         description: 'Developer resources',
         subroutes: {
             'https://github.com/ECE49595-Team2/StockSensAI': "Repository",
-            'http://localhost:3000/attributions.html': "Attributions",
+            '/attributions.html': "Attributions",
         }
     }
 }

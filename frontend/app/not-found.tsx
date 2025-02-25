@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/shadcn/ui/button";
 import Image from "next/image";
+import SamuraiIcon from "@/public/Samurai Icon.png";
 
 function NotFound() {
 
@@ -18,7 +19,7 @@ function NotFound() {
                 
                 <Button onClick={goHome()}>Go back home</Button>
             </div>
-            <Image src="/Samurai icon.png" alt="Samurai icon" width={500} height={500} className="absolute z-5 opacity-5 user-select-none pointer-events-none" />
+            <Image src={SamuraiIcon} alt="Samurai icon" width={500} height={500} className="absolute z-5 opacity-5 user-select-none pointer-events-none" />
         </div>
     );
 }

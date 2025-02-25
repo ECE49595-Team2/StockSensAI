@@ -7,6 +7,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Logo from '@/public/logo.png';
+import AuthDrawer from './auth/auth-drawer';
+import { Skeleton } from '@/shadcn/ui/skeleton';
+import useUser from '@/hooks/use-user';
 
 type NavigationItemsType = {
     [key: string]: {
@@ -18,11 +21,17 @@ type NavigationItemsType = {
     }
 }
 
+type VerifyResponse = {
+    success: boolean;
+    cookie?: string;
+}
+
 const navigationItems: NavigationItemsType = NavigationItems;
 
 function Nav() {
 
     const [scrollY, setScrollY] = useState(0);
+    const { user } = useUser();
 
     useEffect(() => {
         setScrollY(window.scrollY / 100);
@@ -36,10 +45,10 @@ function Nav() {
         return () => {
             window.removeEventListener('scroll', handleScroll);
         };
-    }, []);
+    }, [user]);
 
     return (
-        <nav className={`flex flex-row justify-start sm:justify-around items-center p-4 fixed w-full z-50 h-[7rem] transition-all duration-10 backdrop-blur-lg ${scrollY >= 0.5 ? 'shadow-lg' : ''}`} style={{ backgroundColor: `rgba(61, 43, 86, ${scrollY >= 0.5 ? 0.5 : scrollY})` }}>
+        <nav className={`flex flex-row justify-start sm:justify-around items-center p-4 fixed w-full z-50 h-[7rem] transition-all duration-10 backdrop-blur-lg ${scrollY >= 0.6 ? 'shadow-lg' : ''}`} style={{ backgroundColor: `rgba(61, 43, 86, ${scrollY >= 0.7 ? 0.7 : scrollY})` }}>
             <SidebarTrigger size={'icon'} className='sm:hidden flex' />
             <Link href='/'>
                 <div id="logo" className={`flex flex-row gap-2 items-center font-anton text-xl select-none`}>
@@ -79,13 +88,20 @@ function Nav() {
                                         </div>
                                     </NavigationMenuContent>
                                 </NavigationMenuItem>
-                        
-                        ))}
+
+                            ))}
                     </NavigationMenuList>
                 </NavigationMenu>
             </div>
             <div id="getStarted" className='hidden sm:flex'>
-                <Button variant={"default"}>Get Started</Button>
+                {!user ?
+                    <AuthDrawer>
+                        <Button variant={"default"}>Get Started</Button>
+                    </AuthDrawer> :
+                    <Link href="/dashboard">
+                        <Button variant={"outline"} >Go to Dashboard</Button>
+                    </Link>
+                }
             </div>
         </nav>
     )

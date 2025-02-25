@@ -3,7 +3,8 @@ import Nav from "@/components/nav";
 import "./globals.css";
 import { SidebarInset, SidebarProvider } from "@/shadcn/ui/sidebar";
 import MainSidebar from "@/components/sidebar";
-
+import { Toaster } from "@/shadcn/ui/sonner";
+import { UserProvider } from "@/hooks/use-user";
 
 export const metadata: Metadata = {
   title: "StockSensAI",
@@ -21,15 +22,17 @@ export default function RootLayout({
       <body
         className={'antialiased text-white'}
       >
-        <SidebarProvider defaultOpen={false}>
-          <MainSidebar />
-          <SidebarInset>
-            <Nav />
-            <article className="flex-1">
-              {children}
-            </article>
-          </SidebarInset>
-        </SidebarProvider>
+        <UserProvider>
+          <SidebarProvider defaultOpen={false}>
+            <MainSidebar />
+            <SidebarInset>
+              <article className="flex-1">
+                {children}
+              </article>
+            </SidebarInset>
+          </SidebarProvider>
+        </UserProvider>
+        <Toaster />
       </body>
     </html>
   );

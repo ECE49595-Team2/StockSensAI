@@ -1,3 +1,7 @@
+import { SidebarInset } from "@/shadcn/ui/sidebar";
+import Nav from "./nav";
+import MainSidebar from "./sidebar";
+
 interface PageProps {
   children: React.ReactNode;
   className?: string;
@@ -5,9 +9,12 @@ interface PageProps {
 
 function Page({ children, className }: PageProps) {
   return (
-    <div className={`pt-[7rem] flex flex-col gap-4 border-box w-screen ${className}`}>
-      {children}
-    </div>
+    <>
+      <Nav />
+        <div className={`pt-[7rem] flex flex-col gap-4 border-box w-screen ${className}`}>
+          {children}
+        </div>
+    </>
   );
 
 }

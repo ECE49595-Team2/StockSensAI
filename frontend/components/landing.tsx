@@ -2,14 +2,18 @@ import { Button } from "@/shadcn/ui/button";
 import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@/shadcn/ui/tooltip";
 import Image from "next/image";
 import SamuraiIcon from "@/public/Samurai Icon.png";
+import AuthDrawer from "@/components/auth/auth-drawer";
+import useUser from "@/hooks/use-user";
 
 function Landing() {
+    const { user } = useUser();
+
     return (
         <div className="flex-1 min-h-[calc(100svh_-_7rem)] w-screen flex flex-col gap-5 items-center justify-center bg-gradient-to-t from-purple-800 to-purple-1200 p-4">
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger>
-                        <Image src={SamuraiIcon} alt="Samurai icon" width={300} height={300} priority draggable={false} className="select-none pointer-events-none"/>
+                        <Image src={SamuraiIcon} alt="Samurai icon" width={300} height={300} priority draggable={false} className="select-none pointer-events-none" />
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>image: Flaticon.com</p>
@@ -20,7 +24,10 @@ function Landing() {
                 Become a Stock-Trading Warrior
             </h1>
             <h2>Master the art of portfolio strategy with the power of AI</h2>
-            <Button>Start your journey</Button>
+            {!user && <AuthDrawer>
+                <Button>Start your journey</Button>
+            </AuthDrawer>
+            }
         </div>
     );
 }
