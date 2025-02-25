@@ -2,6 +2,9 @@
 node_modules/
 frontend/pnpm-lock.yaml
 
+# Ignore test files
+test/
+
 # Ignore log files
 *.log
 
@@ -35,3 +38,4 @@ coverage/
 
 # Ignore pycache
 __pycache__
+

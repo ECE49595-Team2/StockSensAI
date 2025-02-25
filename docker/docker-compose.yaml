@@ -1,20 +1,15 @@
 services:
-  database:
-    image: couchdb:latest
-    restart: always
-    volumes:
-      - couchdb_data:/opt/couchdb/data
-      - ./couchdb_config/config.ini:/opt/couchdb/etc/local.ini
-    ports:
-      - "5984:5984"
-
   frontend:
-    image: ghcr.io/ece49595-team2/stocksensai-frontend:latest
+    platform: linux/amd64
+    image: ghcr.io/ece49595-team2/stocksensai-frontend@sha256:34c4c24dbd80494ce84d520570d167757c8418c1cfe9e64d8901d8dc04f113bc
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - COUCHDB_URL=http://database:5984
     ports:
       - "3000:3000"
+    networks:
+      - manager_external
+      - manager_internal
     deploy:
       replicas: 1
       restart_policy:
@@ -30,10 +25,13 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure    
+        condition: on-failure     
   
   llm-server:
+    platform: linux/amd64
     image: ghcr.io/ece49595-team2/stocksensai-llm-server:latest
+    networks:
+      - manager_internal
     environment: 
       - POLYGON_API_KEY=${POLYGON_API_KEY}
     ports:
@@ -43,34 +41,8 @@ services:
       restart_policy:
         condition: on-failure
 
-  watchtower:
-    image: containrrr/watchtower
-    command: --interval 30 --cleanup
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.docker/config.json:/root/.docker/config.json:ro
-    restart: always
-
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/certbot/www:/var/www/certbot
-      - /etc/letsencrypt:/etc/letsencrypt
-    restart: always
-    depends_on:
-      - frontend
-      - certbot
-
-  certbot: 
-    image: certbot/certbot
-    volumes:
-      - ./nginx/certbot/www:/var/www/certbot
-      - /etc/letsencrypt:/etc/letsencrypt
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h; done;'"
-
-volumes:
-  couchdb_data:
+networks:
+  manager_external:
+    external: true
+  manager_internal: 
+    external: true

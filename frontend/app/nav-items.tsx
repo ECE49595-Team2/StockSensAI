@@ -1,11 +1,20 @@
 const NavigationItems = {
-    '/': 'Home',
-    '/about': 'About',
-    '/dashboard': {
-        'Dashboard': '/dashboard',
-        'Portfolio': '/dashboard/portfolio',
-        'Watchlist': '/dashboard/watchlist',
-        'Settings': '/dashboard/settings',
+    '/about': {
+        title: 'About',
+        description: 'Learn more about StockSensAI',
+        subroutes: {
+            '/about/mission': 'Our Mission',
+            '/about/team': 'Our Team',
+            '/about/tutorial': 'Tutorial',
+        }
+    },
+    '/developers': {
+        title: 'Developers',
+        description: 'Developer resources',
+        subroutes: {
+            'https://github.com/ECE49595-Team2/StockSensAI': "Repository",
+            '/attributions.html': "Attributions",
+        }
     }
 }
 

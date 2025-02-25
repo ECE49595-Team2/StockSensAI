@@ -2,7 +2,7 @@
 FROM node:18-alpine
 
 # Install PNPM globally
-RUN npm install -g pnpm
+RUN npm install -g pnpm@latest
 
 # Set working directory inside the container
 WORKDIR /app
@@ -10,7 +10,7 @@ WORKDIR /app
 # Ensure required dependencies are available for Next.js
 RUN apk add --no-cache libc6-compat
 
-# Copy package.json and pnpm-lock.yaml first for better caching
+# Copy package.json first for better caching
 COPY package.json ./
 
 # Install dependencies using PNPM
