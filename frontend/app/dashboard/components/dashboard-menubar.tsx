@@ -15,7 +15,7 @@ function DashboardMenubar() {
 
 
     return (
-        <div className="menubar flex flex-row gap-3 items-center">
+        <div className="flex h-10 flex-row gap-3 items-center">
             <SidebarTrigger className="text-black" />
             <Breadcrumb>
                 <BreadcrumbList>

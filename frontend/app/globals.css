@@ -26,7 +26,41 @@
     font-style: normal;
 }
 
+@keyframes slideUp {
+    0% {
+        transform: translateY(100%);
+        backdrop-filter: blur(10px);
+        opacity: 0;
+    }
+    30% {
+        color: green;
+    }
+    100% {
+        transform: translateY(0%);
+        opacity: 1;
+    }
+}
+
+@keyframes zoomIn {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 @layer utilities {
+    .slide-up {
+        animation: slideUp 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .zoom-in {
+        animation: zoomIn 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     .font-anton {
         font-family: 'Anton', sans-serif;
     }
@@ -170,5 +204,9 @@
   body {
     @apply bg-background text-foreground;
     }
+}
+
+#dashboard {
+    user-select: none;
 }
 

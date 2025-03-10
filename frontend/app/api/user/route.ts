@@ -5,8 +5,6 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request): Promise<NextResponse> {
     const { email, password } = await req.json();
 
-    console.log(COUCHDB_USER, COUCHDB_PASSWORD);
-
     // Authenticate with CouchDB
     const couchResponse = await fetch(`${COUCHDB_URL}/_session`, {
       method: "POST",
@@ -51,7 +49,9 @@ export async function PUT(req: Request): Promise<NextResponse> {
         body: JSON.stringify({
             name: email,
             password: password,
-            "..name": name,
+            prefs: {
+                name: name,
+            },
             roles: ["user"],
             type: "user",
         })

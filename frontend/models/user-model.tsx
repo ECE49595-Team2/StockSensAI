@@ -8,23 +8,19 @@ export enum Avatar {
 class User {
     public email?: string;
     public name?: string;
-    public avatar?: Avatar;
+    // public portfolio: PortfolioPortfolio
     public prefs: { [key: string]: any } = {};
 
-    private _getRandomAvatar(): Avatar {
-        const avatars = Object.values(Avatar);
-        return avatars[Math.floor(Math.random() * avatars.length)];
-    }
-
     public async fetchUserData() {
-        const response = await fetch("/api/user/prefs", {
+        const response = await fetch("/api/user/details", {
             method: "POST",
             credentials: "include",
-            body: JSON.stringify({
-                email: this.email,
-            }),
+            cache: "no-store",
+            body: JSON.stringify({ email: this.email })
         });
+        console.log(response);
         const data = await response.json();
+        console.log("data", data);
         Object.keys(data).forEach((key) => {
             if (key !== "name")
                 this.prefs[key] = data.prefs[key];
@@ -35,8 +31,7 @@ class User {
     constructor(email?: string, name?: string) {
         this.email = email;
         this.name = name;
-
-        this.avatar = this._getRandomAvatar();
+        console.log("EMAIL", this.email);
     }
 
     public toJson(): string {

@@ -1,14 +1,21 @@
-import useUser from "@/hooks/use-user";
+import { useUser } from "@/hooks/use-user";
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shadcn/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shadcn/ui/sidebar";
 import { Skeleton } from "@/shadcn/ui/skeleton";
 import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
 import { ChevronsUpDown, SettingsIcon, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
+import { useShallow } from "zustand/react/shallow";
 
 function UserDropdown() {
-    const { user } = useUser();
+    const { user, checkUserSession } = useUser(useShallow((state) => {
+        return {
+            user: state.user,
+            checkUserSession: state.checkUserSession
+        }
+    }));
     const router = useRouter();
 
     const logout = async () => {
@@ -20,6 +27,7 @@ function UserDropdown() {
         const data = await response.json();
         if (data.success) {
             window.location.href = "/";
+            sessionStorage.clear();
         } else {
             toast.error("Failed to logout. Try again.", {
                 description: "Server error", 
@@ -28,6 +36,10 @@ function UserDropdown() {
             })
         }
     }
+
+    useEffect(() => {
+        checkUserSession();
+    }, []);
 
     return (
         <SidebarMenu className="w-full">
