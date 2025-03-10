@@ -1,4 +1,4 @@
-import { COUCHDB_URL } from "@/app/env";
+import { COUCHDB_PASSWORD, COUCHDB_URL, COUCHDB_USER } from "@/app/env";
 import { Card } from "@/shadcn/ui/card";
 import { cookies } from "next/headers";
 
@@ -24,7 +24,7 @@ function getBalance({ userId }: { userId: string }): Promise<Response> {
         cache: "no-store",
         headers: {
             Authorization: `Basic ${
-                btoa("user:password")
+                btoa(`${COUCHDB_USER}:${COUCHDB_PASSWORD}`)
             }`
         }
     });

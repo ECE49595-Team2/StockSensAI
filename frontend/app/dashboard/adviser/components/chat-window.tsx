@@ -1,30 +1,19 @@
 "use client";
 import { useChatStore } from "@/hooks/use-chat";
-import ChatBubble, { ChatBubbleType } from "./chat-bubble";
+import ChatBubble from "./chat-bubble";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useShallow } from "zustand/react/shallow";
 
 
 function ChatWindow() {
-    const { messages, setMessages } = useChatStore(useShallow((state) => ({ messages: state.messages, setMessages: state.setMessages })));
+    const { messages } = useChatStore(useShallow((state) => ({ messages: state.messages, setMessages: state.setMessages })));
 
     useEffect(() => {
         // Scroll to bottom of chat window
         const chatWindow = document.getElementById("chat-window");
         chatWindow?.scrollTo(0, chatWindow.scrollHeight);
     }, [messages]);
-
-    // useEffect(() => {
-    //     const messagesToSet: { text: string, type: ChatBubbleType }[] = [
-    //         { text: "Hello! How can I help you today?", type: ChatBubbleType.Assistant },
-    //         { text: "I would like to know more about stocks.", type: ChatBubbleType.User },
-    //         { text: "Sure! What would you like to know?", type: ChatBubbleType.Assistant },
-    //     ];
-
-    //     setMessages(messagesToSet);
-    //     console.log(messages);
-    // }, []);
 
     return (
         <div className="overflow-scroll min-h-[100px] h-full min-w-[80%] bg-gray-100 p-3 rounded-lg inset-shadow-sm mt-3">

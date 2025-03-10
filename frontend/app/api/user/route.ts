@@ -44,7 +44,7 @@ export async function PUT(req: Request): Promise<NextResponse> {
         headers: {
             "Content-Type": "application/json",
             Authorization: `Basic ${
-                btoa("user:password")}`,
+                btoa(`${COUCHDB_USER}:${COUCHDB_PASSWORD}`)}`,
             },
         body: JSON.stringify({
             name: email,

@@ -9,13 +9,21 @@ import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 
 export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
   const searchParams = useSearchParams();
   const unauthorizedParam = searchParams.get('unauthorized');
   const checkUserSession = useUser((state) => state.checkUserSession);
 
   useEffect(() => {
     checkUserSession();
-  }, []);
+  }, [checkUserSession, unauthorizedParam]);
 
   useEffect(() => {
     const handleUnauthorized = () => {
@@ -34,7 +42,7 @@ export default function Home() {
     setTimeout(() => {
       handleUnauthorized();
     }, 0);
-  }, []);
+  }, [unauthorizedParam]);
 
   return (
     <Page>

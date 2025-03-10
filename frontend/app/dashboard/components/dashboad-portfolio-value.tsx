@@ -1,4 +1,4 @@
-import { COUCHDB_URL } from "@/app/env";
+import { COUCHDB_PASSWORD, COUCHDB_URL, COUCHDB_USER } from "@/app/env";
 import { Card } from "@/shadcn/ui/card";
 import { cookies } from "next/headers";
 
@@ -7,7 +7,7 @@ async function getPortfolio({ userId }: { userId: string }) {
         method: "GET",
         cache: "no-store",
         headers: {
-            Authorization: `Basic ${btoa("user:password")}`
+            Authorization: `Basic ${btoa(`${COUCHDB_USER}:${COUCHDB_PASSWORD}`)}`,
         }
     });
 }

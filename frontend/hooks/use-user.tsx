@@ -23,7 +23,6 @@ export const useUser = create<UserStoreType>()(
                 const data = await response.json();
 
                 if (data.success) {
-                    console.log("DATA?", data.session?.userCtx);
                     const user = new User(data.session?.userCtx.name);
                     await user.fetchUserData();
                     set({ user });

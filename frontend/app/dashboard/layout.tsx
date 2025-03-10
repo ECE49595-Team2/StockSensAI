@@ -4,7 +4,6 @@ import DashboardSidebar from "./components/dashboard-sidebar";
 import { SidebarProvider } from "@/shadcn/ui/sidebar";
 import DashboardMenubar from "./components/dashboard-menubar";
 import { motion, AnimatePresence } from "framer-motion";
-import { use } from "react";
 import { usePathname } from "next/navigation";
 
 export default function Layout({

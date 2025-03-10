@@ -2,7 +2,7 @@
 import { useChatStore} from "@/hooks/use-chat";
 import { Button } from "@/shadcn/ui/button";
 import { ChatBubbleType } from "./chat-bubble";
-import { useShallow } from "zustand/react/shallow";
+
 
 function SendButton({ messageToSend, onSend }: { messageToSend: string | undefined, onSend: () => void }) {
     const { messages, setMessages } = useChatStore();

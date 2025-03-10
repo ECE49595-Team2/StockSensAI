@@ -5,7 +5,7 @@ import { Skeleton } from "@/shadcn/ui/skeleton";
 import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
 import { ChevronsUpDown, SettingsIcon, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
 
@@ -39,7 +39,7 @@ function UserDropdown() {
 
     useEffect(() => {
         checkUserSession();
-    }, []);
+    }, [checkUserSession]);
 
     return (
         <SidebarMenu className="w-full">

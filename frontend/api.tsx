@@ -1,4 +1,4 @@
-import { COUCHDB_URL } from "@/app/env";
+import { COUCHDB_PASSWORD, COUCHDB_URL, COUCHDB_USER } from "@/app/env";
 import { RequestCookie } from "next/dist/compiled/@edge-runtime/cookies";
 
 export type JsonObject = {
@@ -49,7 +49,7 @@ class DatabaseAPI extends API {
             roles: ["user"],
             type: "user"
         }, {
-            Authorization: `Basic ${btoa("user:password")}`,
+            Authorization: `Basic ${btoa(`${COUCHDB_USER}:${COUCHDB_PASSWORD}`)}`,
         }).then(async (response) => {
             if (!response.ok) {
                 return false;

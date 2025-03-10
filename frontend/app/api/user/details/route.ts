@@ -1,4 +1,4 @@
-import { COUCHDB_URL } from "@/app/env";
+import { COUCHDB_PASSWORD, COUCHDB_URL, COUCHDB_USER } from "@/app/env";
 
 export async function POST(req: Request)
 {
@@ -6,12 +6,9 @@ export async function POST(req: Request)
     const response = await fetch(`${COUCHDB_URL}/_users/org.couchdb.user:${email}`, {
         method: "GET",
         headers: {
-            Authorization: `Basic ${btoa("user:password")}`
+            Authorization: `Basic ${btoa(`${COUCHDB_USER}:${COUCHDB_PASSWORD}`)}`,
         }
     });
-
-    console.log("email", email);
-    console.log("server response", response);
 
     if (!response.ok) {
         return new Response(JSON.stringify({}), { status: 500 });
