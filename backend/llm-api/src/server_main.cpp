@@ -126,10 +126,17 @@ void handle_post_request(HTTPMessage headerData, HTTPResponse* response)
             // Get the prompt from the request body
             json requestJson = json::parse(headerData.body);
             std::string prompt = requestJson["prompt"].get<std::string>();
+            
+            std::string model = LLAMA;
+
+            if (requestJson["model"].get<std::string>() == "DeepSeek")
+            {
+                model = DEEPSEEK;
+            }
 
             std::cout << prompt << std::endl;
 
-            json responseJson = getLlamaPrompt(prompt);
+            json responseJson = getLlamaPrompt(prompt, model);
 
             genericResponse(response, 200, JSON, responseJson.dump());
         }
@@ -155,7 +162,15 @@ void handle_post_request(HTTPMessage headerData, HTTPResponse* response)
                 timeLim = requestJson["time_limit"].get<double>();
             }
 
-            json responseJson = getNewsAnalysis(ticker, timeLim);
+            std::string model = LLAMA;
+
+            if (requestJson.find("model") != requestJson.end() && requestJson["model"].get<std::string>() == "DeepSeek")
+            {
+                model = DEEPSEEK;
+            }
+
+
+            json responseJson = getNewsAnalysis(ticker, model, timeLim);
 
             genericResponse(response, 200, JSON, responseJson.dump());
         }

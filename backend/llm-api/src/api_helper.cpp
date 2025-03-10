@@ -188,7 +188,7 @@ json getLlamaPong()
     return responseJson;
 }
 
-json getLlamaPrompt(const std::string& prompt)
+json getLlamaPrompt(const std::string& prompt, const std::string& model)
 {
     dotenv::init();
 
@@ -203,7 +203,7 @@ json getLlamaPrompt(const std::string& prompt)
 
     // Initialize OpenRouter API call body content
     json jsonPrompt;
-    jsonPrompt["model"] = "meta-llama/llama-3.3-70b-instruct:free";
+    jsonPrompt["model"] = model;
     json message;
     message["role"] = "user";
     message["content"] = prompt;
@@ -226,7 +226,7 @@ json getLlamaPrompt(const std::string& prompt)
     return responseJson;
 }
 
-json getNewsAnalysis(const std::string& ticker, const double ageLim)
+json getNewsAnalysis(const std::string& ticker, const std::string& model, const double ageLim)
 {
     // Get initial article info
     json articlesJson = getPolygonNews(ticker, ageLim);
@@ -315,11 +315,11 @@ json getNewsAnalysis(const std::string& ticker, const double ageLim)
 
     while (improperResponse)
     {
-        json testPrompt = getLlamaPrompt(prompt);
+        json testPrompt = getLlamaPrompt(prompt, model);
 
         try
         {
-            //std::cout << testPrompt["response"].get<std::string>() << std::endl;
+            std::cout << testPrompt["response"].get<std::string>() << std::endl;
             responseLlama = json::parse(testPrompt["response"].get<std::string>());
 
             if (!responseLlama.empty())
