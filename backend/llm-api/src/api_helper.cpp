@@ -76,7 +76,7 @@ std::string callExternalApiPost(const std::string& url, const std::string& metho
     return readBuffer;
 }
 
-json getPolygonNews(const std::string& ticker)
+json getPolygonNews(const std::string& ticker, const double ageLim)
 {
     dotenv::init();
 
@@ -90,33 +90,70 @@ json getPolygonNews(const std::string& ticker)
     }
 
     // Call the get api with ticker and api key authentication
-    std::string apiRes = callExternalApiPost("https://api.polygon.io/v2/reference/news?ticker=" + ticker + "&limit=10&apiKey=" + polygonKey);
+    std::string apiRes = callExternalApiPost(POLYGON_ENDPOINT + "/reference/news?ticker=" + ticker + "&limit=15&apiKey=" + polygonKey);
 
     // Parse the Json
     json apiJson = json::parse(apiRes);
 
-    // get the articles
+    // Get the articles
     json articles = apiJson["results"];
 
+    // Initialize a JSON object to hold the formatted articles
     json responseJson;
 
-    // Lets use a test sentiment list for our ticker symbol
-    std::vector<std::string> sentiments;
+    // Initialize an array to hold individual article details
+    std::vector<json> articlesInfo;
 
+    // Iterate through each article in the result set
     for (size_t i = 0; i < articles.size(); i++)
     {
-        json insights = articles[i]["insights"];
+        // Extract the current article
+        json article = articles[i];
 
-        for (size_t j = 0; j < insights.size(); j++)
+        // Initialize a JSON object to hold the current article details
+        json articleInfo;
+
+        // Calculate the age of the article
+        time_t now = time(0);
+        tm* publishedTime = new tm();
+        strptime(article["published_utc"].get<std::string>().c_str(), "%Y-%m-%dT%H:%M:%S.%fZ", publishedTime);
+
+        // Force the timezone to UTC
+        publishedTime->tm_isdst = 0;
+        time_t publishedTimeUnix = timegm(publishedTime);
+        double ageInSeconds = difftime(now, publishedTimeUnix);
+
+        // Check if the age of the article is within the specified limit (if any)
+        if (!ageLim || ageInSeconds <= ageLim)
         {
-            if (insights[j]["ticker"] == ticker)
+            // Add relevant info
+            articleInfo["title"] = article["title"];
+            articleInfo["summary"] = article["description"];
+            articleInfo["url"] = article["article_url"];
+            articleInfo["time"] = article["published_utc"];
+            articleInfo["age"] = ageInSeconds;
+
+            json insights = article["insights"];
+    
+            // Iterate through the article insights to find the sentiment associated with the given ticker
+            for (size_t j = 0; j < insights.size(); j++)
             {
-                sentiments.push_back(insights[j]["sentiment"]);
+                // Check if the insight's ticker matches the provided ticker
+                if (insights[j]["ticker"] == ticker)
+                {
+                    // Add the sentiment and reasoning to the articleInfo object
+                    articleInfo["sentiment"] = insights[j]["sentiment"];
+                    articleInfo["sentiment_reasoning"] = insights[j]["sentiment_reasoning"];
+                }
             }
+    
+            // Add the articleInfo object to the articlesInfo array
+            articlesInfo.push_back(articleInfo);
         }
     }
 
-    responseJson["sentiments"] = sentiments;
+    // Add the articlesInfo array to the responseJson object
+    responseJson["articles"] = articlesInfo;
 
     return responseJson;
 }
@@ -138,16 +175,177 @@ json getLlamaPong()
     std::string pingJsonString = "{\"model\":\"meta-llama/llama-3.3-70b-instruct:free\",\"messages\":[{\"role\":\"user\",\"content\":\"WhatisacommonphrasethatisafterPing?\"}]}";
 
     // Call the get api with ticker and api key authentication
-    std::string apiRes = callExternalApiPost("https://openrouter.ai/api/v1/chat/completions", "POST", pingJsonString, openRouterKey);
+    std::string apiRes = callExternalApiPost(OPEN_ROUTER_ENDPOINT, "POST", pingJsonString, openRouterKey);
 
     // Parse the Json
     json apiJson = json::parse(apiRes);
 
-    std::cout << apiJson << std::endl;
+    json responseJson = {
+        {"status", "success"},
+        {"response", apiJson["choices"][0]["message"]["content"]}
+    };
+
+    return responseJson;
+}
+
+json getLlamaPrompt(const std::string& prompt, const std::string& model)
+{
+    dotenv::init();
+
+    // Get the key using dotenv
+    std::string openRouterKey = getenv("OPEN_ROUTER_API_KEY");
+
+    // Return Null if there is no proper key enviorment variable
+    if (openRouterKey == "")
+    {
+        return NULL;
+    }
+
+    // Initialize OpenRouter API call body content
+    json jsonPrompt;
+    jsonPrompt["model"] = model;
+    json message;
+    message["role"] = "user";
+    message["content"] = prompt;
+    jsonPrompt["messages"].push_back(message);
+
+    // Create a json string properly formatted with the prompt
+    std::string jsonPromptString = jsonPrompt.dump();
+
+    // Call the get api with the prompt and api key authentication
+    std::string apiRes = callExternalApiPost(OPEN_ROUTER_ENDPOINT, "POST", jsonPromptString, openRouterKey);
+
+    // Parse the Json
+    json apiJson = json::parse(apiRes);
 
     json responseJson = {
         {"status", "success"},
         {"response", apiJson["choices"][0]["message"]["content"]}
+    };
+
+    return responseJson;
+}
+
+json getNewsAnalysis(const std::string& ticker, const std::string& model, const double ageLim)
+{
+    // Get initial article info
+    json articlesJson = getPolygonNews(ticker, ageLim);
+
+    json promptArticleJson;
+
+    promptArticleJson["sentiment_counts"]["positive"] = 0;
+    promptArticleJson["sentiment_counts"]["negative"] = 0;
+    promptArticleJson["sentiment_counts"]["neutral"] = 0;
+
+    std::vector<json> articlesInfo;
+
+    // Format and injest all the articles
+    for (size_t i = 0; i < articlesJson["articles"].size(); i++)
+    {
+        json articleInfo;
+
+        articleInfo["article"] = articlesJson["articles"][i]["title"];
+        articleInfo["sentiment"] = articlesJson["articles"][i]["sentiment"];
+        articleInfo["sentiment_reasoning"] = articlesJson["articles"][i]["sentiment_reasoning"];
+        articleInfo["summary"] = articlesJson["articles"][i]["summary"];
+
+        // Increment the sentiment counts based on the article's sentiment
+        if (articleInfo["sentiment"] == "positive") 
+        {
+            promptArticleJson["sentiment_counts"]["positive"] = promptArticleJson["sentiment_counts"]["positive"].get<int>() + 1;
+        }
+        else if (articleInfo["sentiment"] == "negative") 
+        {
+            promptArticleJson["sentiment_counts"]["negative"] = promptArticleJson["sentiment_counts"]["negative"].get<int>() + 1;
+        }
+        else if (articleInfo["sentiment"] == "neutral") 
+        {
+            promptArticleJson["sentiment_counts"]["neutral"] = promptArticleJson["sentiment_counts"]["neutral"].get<int>() + 1;
+        }
+
+        // Calculate the age of the article in a human-readable format
+        double ageInSeconds = articlesJson["articles"][i]["age"].get<double>();
+        int seconds = int(ageInSeconds);
+        int minutes = seconds / 60;
+        int hours = minutes / 60;
+        int days = hours / 24;
+
+        // Create an age string that includes seconds, minutes, hours, etc
+        std::string ageString;
+
+        if (days > 0) 
+        {
+            ageString = std::to_string(days) + " days, ";
+        }
+        if (hours > 0) 
+        {
+            ageString += std::to_string(hours % 24) + " hours, ";
+        }
+        if (minutes > 0) 
+        {
+            ageString += std::to_string(minutes % 60) + " minutes, ";
+        }
+
+        ageString += std::to_string(seconds % 60) + " seconds";
+
+        // Add the age string to the promptArticleJson object
+        articleInfo["age"] = ageString;
+
+        // Add the articleInfo object to the articlesInfo array
+        articlesInfo.push_back(articleInfo);
+    }
+
+    promptArticleJson["articles"] = articlesInfo;
+
+    json promptFormatJson = {
+        {"action", "ENTER:buy/sell/hold"},
+        {"reasoning", "ADD A SUMMARY OF YOUR REASONING"}
+    };
+
+    // Generate the test prompt
+    std::string prompt = "You are an expert investor. Analyze this article json with recent news about the stock ticker ";
+    prompt += ticker + ":\n";
+    prompt += promptArticleJson.dump();
+    prompt += "\n\n";
+    prompt += "Your format will PURELY be in json using this template (no extra info outside of json notation):\n";
+    prompt += promptFormatJson.dump();
+
+    json responseLlama;
+    bool improperResponse = true;
+
+    while (improperResponse)
+    {
+        json testPrompt = getLlamaPrompt(prompt, model);
+
+        try
+        {
+            std::cout << testPrompt["response"].get<std::string>() << std::endl;
+            responseLlama = json::parse(testPrompt["response"].get<std::string>());
+
+            if (!responseLlama.empty())
+            {
+                // Check if the response contains the expected action and reasoning
+                std::string action = responseLlama["action"].get<std::string>();
+                std::string reasoning = responseLlama["reasoning"].get<std::string>();
+
+                // Check if the action is one of the expected values
+                if (action == "buy" || action == "sell" || action == "hold")
+                {
+                    improperResponse = false;  
+                }
+            }
+        }
+        catch (const json::exception& e)
+        {
+            std::cerr << "Json response from Llama Invalid Retrying..." << std::endl;
+        }
+    }
+
+    // Format the response json
+    json responseJson = {
+        {"action", responseLlama["action"].get<std::string>()},
+        {"reasoning", responseLlama["reasoning"].get<std::string>()},
+        {"source_data", promptArticleJson}
     };
 
     return responseJson;
