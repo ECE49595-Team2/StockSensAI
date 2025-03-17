@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Depends, Request, HTTPException
 from pydantic import BaseModel
 import couchdb
-import requests
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -19,10 +18,13 @@ API_KEY = os.environ.get("ALPACA_API_KEY", os.getenv("ALPACA_API_KEY"))
 API_SECRET = os.environ.get("ALPACA_API_SECRET", os.getenv("ALPACA_API_SECRET"))
 api = tradeapi.REST(API_KEY, API_SECRET, base_url="https://paper-api.alpaca.markets")
 
-COUCHDB_URL = "http://admin:password@localhost:5984"
+COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
 DB_NAME = "users"
 server = couchdb.Server(COUCHDB_URL)
-db = server[DB_NAME]
+if DB_NAME not in server:
+    db = server.create(DB_NAME)
+else:
+    db = server[DB_NAME]
 
 
 class AccountValueEntry(BaseModel):
@@ -35,6 +37,7 @@ class UserDocument(BaseModel):
     stocks_owned: Dict[str, float]  # Example: {"AAPL": 5, "TSLA": 2}
     account_value_history: List[AccountValueEntry]
     buying_power: float
+    creation_date: str
 
 
 def get_stock_prices(symbols):
@@ -43,7 +46,7 @@ def get_stock_prices(symbols):
     
     for symbol in symbols:
         try:
-            trade = api.get_last_trade(symbol)
+            trade = api.get_latest_trade(symbol)
             prices[symbol] = trade.price
         except Exception as e:
             print(f"Error fetching price for {symbol}: {e}")
@@ -79,9 +82,10 @@ async def update_account_history(request: Request, user_id: str = Depends(get_us
 
         stocks_owned = user_doc.get("stocks_owned", {})
         stock_prices = get_stock_prices(list(stocks_owned.keys()))
-        total_value = sum(stock_prices.get(symbol, 0) * qty for symbol, qty in stocks_owned.items())
+        total_value = user_doc.get("buying_power", 0) + sum(stock_prices.get(symbol, 0) * qty for symbol, qty in stocks_owned.items())
+        current_time = datetime.now().isoformat() 
         entry = {
-            "timestamp": datetime.now(),
+            "timestamp": current_time,
             "value": total_value
         }
         user_doc.setdefault("account_value_history", []).append(entry)
@@ -102,9 +106,9 @@ async def buy_order(request: Request, stock: str, quantity: float, user_id: str 
         stocks_owned = user_doc.get("stocks_owned", {})
         stocks_owned[stock] = stocks_owned.get(stock, 0) + quantity
         user_doc["stocks_owned"] = stocks_owned
-        stock_prices = get_stock_prices(list(stock))
+        stock_prices = get_stock_prices([stock])
         new_buying_power = user_doc.get("buying_power", 100000) - (stock_prices.get(stock, 0) * quantity)
-        db["buying_power"] = new_buying_power 
+        user_doc["buying_power"] = new_buying_power 
         db[user_id] = user_doc
 
         return {"message": "Bought stock", "new_stock_quantity": stocks_owned[stock]}
@@ -121,9 +125,9 @@ async def sell_order(request: Request, stock: str, quantity: float, user_id: str
         stocks_owned = user_doc.get("stocks_owned", {})
         stocks_owned[stock] = max(stocks_owned.get(stock, 0) - quantity, 0)
         user_doc["stocks_owned"] = stocks_owned
-        stock_prices = get_stock_prices(list(stock))
+        stock_prices = get_stock_prices([stock])
         new_buying_power = user_doc.get("buying_power", 100000) + (stock_prices.get(stock, 0) * quantity)
-        db["buying_power"] = new_buying_power 
+        user_doc["buying_power"] = new_buying_power 
         db[user_id] = user_doc
 
         return {"message": "Sold stock", "new_stock_quantity": stocks_owned[stock]}
