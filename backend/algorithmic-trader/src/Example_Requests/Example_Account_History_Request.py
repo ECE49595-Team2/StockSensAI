@@ -1,9 +1,14 @@
 import requests
 
-url = "http://127.0.0.1:8000/update-account-history"
-cookies = {"AuthSession": "ea77414dc0d5aa37e41826361a00017e"}  # Set user_id as a cookie
-#params = {"stock": "AAPL", "quantity": 5}
+url = "http://localhost:5984/_session"
+data = {"name": "my_username", "password": "mypassword"}
+session = requests.Session()
 
-response = requests.post(url, cookies=cookies)
+response = session.post(url, json=data)
+print(response.json())  # Should return {"ok": true, "name": "my_username", "roles": []}
+
+url = "http://127.0.0.1:8000/update-account-history"
+
+response = session.post(url, cookies=session.cookies.get_dict())
 print(response.json())
 print(response.status_code)
