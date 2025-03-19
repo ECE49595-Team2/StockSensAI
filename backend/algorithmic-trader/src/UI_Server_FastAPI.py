@@ -115,11 +115,10 @@ async def update_account_history(request: Request, user_id: str = Depends(get_us
                 closing_prices = bars["close"].to_frame().rename(columns={"close": stock})
                 closing_prices.index = closing_prices.index.strftime("%Y-%m-%d")
             else:
-                # Multiple stocks, unstack works fine
-                closing_prices = bars["close"].unstack(level=0)
+                # Multiple stocks
+                closing_prices = bars.reset_index().pivot(index="timestamp", columns="symbol", values="close")
                 closing_prices.index = closing_prices.index.strftime("%Y-%m-%d")
         else:
-            print("no transactions")
             closing_prices = {}
 
         for x in range(6):
@@ -130,7 +129,6 @@ async def update_account_history(request: Request, user_id: str = Depends(get_us
             if(formatted_day in existing_account_history):
                 historical_data_point = {"timestamp": formatted_day, "value": existing_account_history[formatted_day]}
                 historical_data.append(historical_data_point)
-                print("skipped recalculation")
                 continue # don't need to recalculate if already in account_value_history
 
             for stock,value in transactions.items():
