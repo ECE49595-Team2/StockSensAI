@@ -14,7 +14,11 @@ API_KEY = os.environ.get("ALPACA_API_KEY", os.getenv("ALPACA_API_KEY"))
 API_SECRET = os.environ.get("ALPACA_API_SECRET", os.getenv("ALPACA_API_SECRET"))
 api = tradeapi.REST(API_KEY, API_SECRET, base_url="https://paper-api.alpaca.markets")
 
-COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
+# for local testing
+# COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
+# for deployment
+COUCHDB_URL = "http://database:5984"
+
 DB_NAME = "_users"
 server = couchdb.Server(COUCHDB_URL)
 if DB_NAME not in server:
@@ -40,7 +44,6 @@ class UserDocument(BaseModel):
     transactions: Dict[str, List[Trade]]
     account_value_history: List[AccountValueEntry]
     buying_power: List[List[float | str]] # buying power at certain timestamp. Changes if user buys or sells stock
-    creation_date: str
 
 
 def get_stock_prices(symbols):
