@@ -1,4 +1,4 @@
-import { BookIcon, Bot, ChartBar, CpuIcon, GitGraphIcon, HomeIcon, Settings } from "lucide-react";
+import { BookIcon, Bot, ChartBar, HomeIcon, Settings } from "lucide-react";
 
 const NavigationItems = {
     "/dashboard": {

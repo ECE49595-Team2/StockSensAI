@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 export async function GET(): Promise<NextResponse> {
   const cookieStore = cookies();
   const cookie = (await cookieStore).get("AuthSession")?.value;
-  console.log("AuthSession", cookie);
+
   if (!cookie) {
     return NextResponse.json(
       { error: "No AuthSession cookie found" },

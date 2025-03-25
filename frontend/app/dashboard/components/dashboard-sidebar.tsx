@@ -37,7 +37,10 @@ function DashboardSidebar() {
                             {Object.keys(NavigationItems).map((key: string) => (
                                 <SidebarMenuItem key={key}>
                                     {key !== "/dashboard/settings" &&
-                                        <SidebarMenuButton size={'lg'} onClick={() => { router.push(key) }} className={`cursor-pointer hover:bg-secondary ${pathname === key ? 'bg-primary text-white' : ''}`}>
+                                        <SidebarMenuButton size={'lg'} onClick={() => {
+                                            router.push(key) 
+                                        }} 
+                                        className={`cursor-pointer hover:bg-secondary ${pathname === key ? 'bg-primary text-white' : ''}`}>
                                             {navigationItems[key].icon}
                                             {navigationItems[key].title}
                                         </SidebarMenuButton>

@@ -5,7 +5,6 @@ import { cookies } from "next/headers";
 export async function middleware(req: NextRequest) {
   const cookieStore = cookies();
   const authSession = (await cookieStore).get("AuthSession")?.value;
-  console.log("AuthSession", authSession);
 
   if (!authSession) {
     const url = new URL(req.url);

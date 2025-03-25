@@ -3,10 +3,10 @@ import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@/shad
 import Image from "next/image";
 import SamuraiIcon from "@/public/Samurai Icon.png";
 import AuthDrawer from "@/components/auth/auth-drawer";
-import useUser from "@/hooks/use-user";
+import { useUser } from "@/hooks/use-user";
 
 function Landing() {
-    const { user } = useUser();
+    const user = useUser((state) => state.user);
 
     return (
         <div className="flex-1 min-h-[calc(100svh_-_7rem)] w-screen flex flex-col gap-5 items-center justify-center bg-gradient-to-t from-purple-800 to-purple-1200 p-4">

@@ -1,32 +1,48 @@
 "use client";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import Block from "@/components/block";
 import Footer from "@/components/footer";
 import Landing from "@/components/landing";
 import Page from "@/components/new-page";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { useUser } from "@/hooks/use-user";
 
 export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
   const searchParams = useSearchParams();
-
-  const handleUnauthorized = () => {
-    const unauthorized: boolean = searchParams.get('unauthorized') === 'true';
-
-    if (unauthorized) {
-      toast.error("You are not authorized to view this page.", {
-        richColors: true,
-        description: "Please log in to view this page.",
-        position: "top-center"
-      });
-    }
-  }
+  const unauthorizedParam = searchParams.get('unauthorized');
+  const checkUserSession = useUser((state) => state.checkUserSession);
 
   useEffect(() => {
+    checkUserSession();
+  }, [checkUserSession, unauthorizedParam]);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      const unauthorized: boolean = unauthorizedParam === 'true';
+      if (unauthorized) {
+        toast.error("You are not authorized to view this page.", {
+          richColors: true,
+          description: "Please log in to view this page.",
+          position: "top-center"
+        });
+        window.history.replaceState({}, document.title, "/");
+        return;
+      }
+    }
+
     setTimeout(() => {
       handleUnauthorized();
     }, 0);
-  }, []);
+  }, [unauthorizedParam]);
 
   return (
     <Page>

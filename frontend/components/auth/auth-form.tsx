@@ -53,7 +53,7 @@ export function AuthForm({ type }: { type: AuthFormType }) {
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const router = useRouter();
 
-    useEffect(() => {}, [isSubmitting])
+    useEffect(() => { }, [isSubmitting])
 
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
@@ -78,18 +78,43 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                     email: data.email,
                     password: data.password,
                     name: data.name,
+                    registered: false,
                 }),
                 headers: {
                     "Content-Type": "application/json",
                 }
             }).then((response => {
-                if (response.ok) {
+                    if (response.ok) {
                     toast.success("Success", {
                         richColors: true,
                         description: "Signing up...",
                         position: "top-center",
                     })
-                    setTimeout(() => { router.push("/dashboard") }, 0);
+                    fetch("/api/user", {
+                        method: "POST",
+                        body: JSON.stringify({
+                            email: data.email,
+                            password: data.password,
+                        }),
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    }).then((response) => {
+                        if (response.ok) {
+                            setTimeout(() => { router.push("/api/register") }, 0);
+                        } else {
+                            toast.error("Failure: Failed to login. Try again.", {
+                                description: "Unknown error occurred.",
+                                richColors: true,
+                                position: "top-center",
+                            })
+                            setIsSubmitting(false)
+                        }
+                    }
+                    )
+                    
+
+
                 } else {
                     toast.error("Failure: Failed to signup. Try again.", {
                         description: "Invalid email or password.",
@@ -100,7 +125,7 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                 }
             }
             ));
-                
+
         else
             fetch("/api/user", {
                 method: "POST",
@@ -112,7 +137,7 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                     "Content-Type": "application/json",
                 },
             }).then((response) => {
-                if(response.ok) {
+                if (response.ok) {
                     toast.success("Success", {
                         richColors: true,
                         description: "Logging in...",
@@ -205,8 +230,9 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                     />
                 )
                 }
-               <Submit isSubmitting={isSubmitting} />
+                <Submit isSubmitting={isSubmitting} />
             </form>
         </Form>
     )
 }
+

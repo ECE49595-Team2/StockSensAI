@@ -11,7 +11,7 @@ function AuthDrawer({ children }: { children: React.ReactNode }) {
             </DrawerTrigger>
             <DrawerContent className="w-full h-[90svh] flex flex-col items-center gap-5">
                 <DialogTitle className="text-4xl font-anton">
-                    Let's get started
+                    Let&apos;s get started
                 </DialogTitle>
 
                 <Tabs defaultValue="login" className="flex flex-col w-full h-full items-center overflow-scroll mb-5">

@@ -1,53 +1,41 @@
 "use client";
-import { useState, createContext, useContext, useEffect } from "react";
-import User, { Avatar } from "@/models/user-model";
-import { usePathname } from "next/navigation";
+import { create } from "zustand";
+import User from "@/models/user-model";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { useChatStore } from "./use-chat";
 
-type UserContextType = {
+interface UserStoreType {
     user: User | undefined;
-    setUser: (user: User | undefined) => void;
-};
+    checkUserSession: () => Promise<void>;
+}
 
-const UserContext = createContext<UserContextType>({ user: undefined, setUser: (user: User | undefined) => { } });
+// Zustand store with persistence
+export const useUser = create<UserStoreType>()(
+    persist(
+        (set) => ({
+            user: undefined,
+            checkUserSession: async () => {
+                const response = await fetch("/api/user/verify", {
+                    method: "GET",
+                    credentials: "include",
+                    cache: "no-store",
+                });
+                const data = await response.json();
 
-export function UserProvider({ children }: { children: React.ReactNode }) {
-    const pathname = usePathname();
-    const [user, setUser] = useState<User | undefined>(undefined);
-
-    useEffect(() => {
-        const checkCookie = async () => {
-            const response = await fetch("/api/user/verify", {
-                method: "GET",
-                credentials: "include",
-                cache: "no-store",
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                const user = new User(data.session?.userCtx.name);
-                await user.fetchUserData();
-                setUser(user);
-            }
-        };
-        checkCookie();
-
-        const interval = setInterval(() => {
-            checkCookie();
+                if (data.success) {
+                    const user = new User(data.session?.userCtx.name);
+                    await user.fetchUserData();
+                    set({ user });
+                }
+                else {
+                    useChatStore.getState().setMessages([]);
+                    set({ user: undefined });
+                }
+            },
+        }),
+        {
+            name: "user-store", // Key for localStorage persistence
+            storage: createJSONStorage(() => sessionStorage), // Store in sessionStorage (won't persist across browser restarts)
         }
-            , 60000);
-        return () => clearInterval(interval);
-    }
-        , [pathname]);
-
-    return (
-        <UserContext.Provider value={{ user, setUser }}>
-            {children}
-        </UserContext.Provider>
-    );
-}
-
-function useUser() {
-    return useContext(UserContext);
-}
-
-export default useUser;
+    )
+);

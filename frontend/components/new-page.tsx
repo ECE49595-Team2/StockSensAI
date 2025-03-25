@@ -1,6 +1,4 @@
-import { SidebarInset } from "@/shadcn/ui/sidebar";
 import Nav from "./nav";
-import MainSidebar from "./sidebar";
 
 interface PageProps {
   children: React.ReactNode;

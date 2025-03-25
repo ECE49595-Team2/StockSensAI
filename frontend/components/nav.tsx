@@ -8,8 +8,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Logo from '@/public/logo.png';
 import AuthDrawer from './auth/auth-drawer';
-import { Skeleton } from '@/shadcn/ui/skeleton';
-import useUser from '@/hooks/use-user';
+import { useUser } from '@/hooks/use-user';
 
 type NavigationItemsType = {
     [key: string]: {
@@ -21,17 +20,13 @@ type NavigationItemsType = {
     }
 }
 
-type VerifyResponse = {
-    success: boolean;
-    cookie?: string;
-}
-
 const navigationItems: NavigationItemsType = NavigationItems;
 
 function Nav() {
 
     const [scrollY, setScrollY] = useState(0);
-    const { user } = useUser();
+    const user = useUser((state) => state.user);
+    
 
     useEffect(() => {
         setScrollY(window.scrollY / 100);
