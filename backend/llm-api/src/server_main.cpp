@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "http_helper.h"
 #include "api_helper.h"
@@ -245,6 +246,17 @@ void handle_request(int client_sockfd)
     }
 }
 
+void* handle_client(void* client_sockfd_ptr)
+{
+    int client_sockfd = *(int*)client_sockfd_ptr;
+
+    handle_request(client_sockfd);
+    close(client_sockfd);
+    delete (int*)client_sockfd_ptr;
+
+    return NULL;
+}
+
 int main(int argc, char *argv[])
 {
     // Validate the number of command line arguments
@@ -304,11 +316,20 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-        // Go into request handling to keep things clean
-        handle_request(client_sockfd);
+        // DEPRICATED
+        // // Go into request handling to keep things clean
+        // handle_request(client_sockfd);
         
-        // Close client fd
-        close(client_sockfd);
+        // // Close client fd
+        // close(client_sockfd);
+
+        // Create a new thread to handle the client
+        int* client_sockfd_ptr = new int(client_sockfd);
+        pthread_t thread;
+        pthread_create(&thread, NULL, handle_client, client_sockfd_ptr);
+
+        // Detach the thread so it runs independently
+        pthread_detach(thread);
     }
 
     // Shutdown
