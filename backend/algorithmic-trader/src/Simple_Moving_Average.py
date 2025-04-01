@@ -47,32 +47,34 @@ def generate_signals(df):
 
 def execute_trade(symbol, signal):
     try:
-        position = api.get_position(symbol)
-        qty = abs(int(float(position.qty)))
+        #position = 0
+        #qty = abs(int(float(position.qty)))
+        qty = 0
     except APIError:
         qty = 0
 
     if signal == 1:  # Buy
         if qty == 0:  # Only buy if no existing position
-            api.submit_order(symbol=symbol, qty=1, side="buy", type="market", time_in_force="gtc")
+            #api.submit_order(symbol=symbol, qty=1, side="buy", type="market", time_in_force="gtc")
             print(f"Bought {symbol}")
+        else:
+            print(f"Buy signal active for symbol {symbol}")
 
     elif signal == -1:  # Sell
         if qty > 0:  # Only sell if currently holding the stock
-            api.submit_order(symbol=symbol, qty=qty, side="sell", type="market", time_in_force="gtc")
+            #api.submit_order(symbol=symbol, qty=qty, side="sell", type="market", time_in_force="gtc")
             print(f"Sold {symbol}")
+        else:
+            print(f"Sell signal active for symbol {symbol}")
 
 
 def run_strategy(symbol):
-    while True:
-        df = get_historical_data(symbol)
-        df = calculate_moving_averages(df)
-        df = generate_signals(df)
+    df = get_historical_data(symbol)
+    df = calculate_moving_averages(df)
+    df = generate_signals(df)
 
-        latest_signal = df["Signal"].iloc[-1]
-        execute_trade(symbol, latest_signal)
-
-        time.sleep(60)  # Wait before checking again
+    latest_signal = df["Signal"].iloc[-1]
+    execute_trade(symbol, latest_signal)
 
 
 def SMA_visualizer():

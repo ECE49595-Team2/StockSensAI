@@ -8,6 +8,7 @@ import alpaca_trade_api as tradeapi
 from typing import List, Dict
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
+from Simple_Moving_Average import run_strategy
 
 load_dotenv()
 
@@ -83,11 +84,6 @@ def get_user_from_cookie(request: Request):
     return user_id
 
 
-def run_strategy(strategy_id: str, user_id: str):
-    """Simulated strategy execution"""
-    print(f"Running strategy {strategy_id} for user {user_id}")
-
-
 app = FastAPI()
 scheduler = BackgroundScheduler()
 scheduler.start()
@@ -99,12 +95,12 @@ def read_root():
 
 
 @app.post("/start_strategy")
-def start_strategy(strategy_id: str, user_id: str):
+def start_strategy(strategy_id: str, user_id: str, symbol: str):
     """Start a new strategy"""
     if strategy_id in jobs:
         return {"message": "Strategy already running"}
     
-    job = scheduler.add_job(run_strategy, "interval", seconds=5, args=[strategy_id, user_id], id=strategy_id)
+    job = scheduler.add_job(run_strategy, "interval", seconds=60, args=[symbol], id=strategy_id)
     jobs[strategy_id] = job
     return {"message": f"Started strategy {strategy_id} for user {user_id}"}
 
