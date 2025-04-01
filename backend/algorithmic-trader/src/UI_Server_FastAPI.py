@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, Request, HTTPException
+from fastapi import FastAPI, Depends, Request, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 import couchdb
 from datetime import datetime, timedelta
@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import alpaca_trade_api as tradeapi
 from typing import List, Dict
 import requests
+from apscheduler.schedulers.background import BackgroundScheduler
 
 load_dotenv()
 
@@ -15,9 +16,9 @@ API_SECRET = os.environ.get("ALPACA_API_SECRET", os.getenv("ALPACA_API_SECRET"))
 api = tradeapi.REST(API_KEY, API_SECRET, base_url="https://paper-api.alpaca.markets")
 
 # for local testing
-# COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
+COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
 # for deployment
-COUCHDB_URL = "http://database:5984"
+# COUCHDB_URL = "http://database:5984"
 
 DB_NAME = "_users"
 server = couchdb.Server(COUCHDB_URL)
@@ -82,12 +83,40 @@ def get_user_from_cookie(request: Request):
     return user_id
 
 
-app = FastAPI()
+def run_strategy(strategy_id: str, user_id: str):
+    """Simulated strategy execution"""
+    print(f"Running strategy {strategy_id} for user {user_id}")
 
+
+app = FastAPI()
+scheduler = BackgroundScheduler()
+scheduler.start()
+jobs = {}
 
 @app.get("/")
 def read_root():
     return {"message": "FastAPI with Docker!"}
+
+
+@app.post("/start_strategy")
+def start_strategy(strategy_id: str, user_id: str):
+    """Start a new strategy"""
+    if strategy_id in jobs:
+        return {"message": "Strategy already running"}
+    
+    job = scheduler.add_job(run_strategy, "interval", seconds=5, args=[strategy_id, user_id], id=strategy_id)
+    jobs[strategy_id] = job
+    return {"message": f"Started strategy {strategy_id} for user {user_id}"}
+
+
+@app.post("/stop_strategy")
+def stop_strategy(strategy_id: str):
+    """Stop a running strategy"""
+    job = jobs.pop(strategy_id, None)
+    if job:
+        job.remove()
+        return {"message": f"Stopped strategy {strategy_id}"}
+    return {"message": "Strategy not found"}
 
 
 @app.post("/update-account-history")
