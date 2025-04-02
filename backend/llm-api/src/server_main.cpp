@@ -170,8 +170,32 @@ void handle_post_request(HTTPMessage headerData, HTTPResponse* response)
                 model = DEEPSEEK;
             }
 
-
             json responseJson = getNewsAnalysis(ticker, model, timeLim);
+
+            genericResponse(response, 200, JSON, responseJson.dump());
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Error getting analysis: " << e.what() << std::endl;
+            badRequestResponse(response);
+        }
+    }
+    else if (headerData.path == "/chat")
+    {
+        try
+        {
+            // Get the ticker from the request body
+            json requestJson = json::parse(headerData.body);
+            std::vector<json> conversation = requestJson["conversation"].get<std::vector<json>>();
+
+            std::string model = LLAMA;
+
+            if (requestJson.find("model") != requestJson.end() && requestJson["model"].get<std::string>() == "DeepSeek")
+            {
+                model = DEEPSEEK;
+            }
+
+            json responseJson = getChatCompletion(conversation, model);
 
             genericResponse(response, 200, JSON, responseJson.dump());
         }
@@ -189,24 +213,38 @@ void handle_post_request(HTTPMessage headerData, HTTPResponse* response)
 
 void handle_request(int client_sockfd)
 {
-    // Receive request data from the client
+    std::string request;
     char buffer[BUFFER_SIZE];
-    int numbytesRec = recv(client_sockfd, buffer, sizeof(buffer), 0);
 
-    if (numbytesRec < 0) {
-        // Handle error receiving data
-        std::cerr << "Error receiving data" << std::endl;
-        return;
+    // Enter the recieve loop
+    while (true) 
+    {
+        // Receive request data from the client
+        int numbytesRec = recv(client_sockfd, buffer, sizeof(buffer), 0);
+
+        // Check for errors or if there are no more bytes to recieve
+        if (numbytesRec < 0) {
+            // Handle error receiving data
+            std::cerr << "Error receiving data" << std::endl;
+            return;
+        }
+        else if (numbytesRec == 0)
+        {
+            break;
+        }
+
+        // Append the new data
+        request.append(buffer, numbytesRec);
+
+        // Break if content headers indicate so
+        if (headerContentCheck(request))
+        {
+            break;
+        }
     }
 
-    // Null-terminate the received data
-    buffer[numbytesRec] = '\0';
-
-    // Convert received data to a string
-    std::string request = std::string(buffer);
-
     // Print request length
-    std::cout << "\nRecieved Request of length: " << numbytesRec << std::endl;
+    std::cout << "\nRecieved Request of length: " << request.size() << std::endl;
 
     // Setup parsing
     HTTPMessage headerData;

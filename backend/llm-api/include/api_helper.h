@@ -27,8 +27,12 @@ std::string callExternalApiPost(const std::string& url, const std::string& metho
 json getPolygonNews(const std::string& ticker, const double ageLim = 0);
 json getLlamaPong();
 json getLlamaPrompt(const std::string& prompt, const std::string& model);
+json getLlamaChat(const std::string& systemPrompt, const std::vector<json>& conversation, const std::string& model);
 
 // News analysis function
 json getNewsAnalysis(const std::string& ticker, const std::string& model, const double ageLim = 0);
+
+// Chat completion function
+json getChatCompletion(const std::vector<json>& conversation, const std::string& model);
 
 #endif
