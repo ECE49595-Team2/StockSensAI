@@ -259,6 +259,8 @@ json getLlamaChat(const std::string& systemPrompt, const std::vector<json>& conv
     // Call the get api with the prompt and api key authentication
     std::string apiRes = callExternalApiPost(OPEN_ROUTER_ENDPOINT, "POST", jsonPromptString, openRouterKey);
 
+    //std::cout << apiRes << std::endl;
+
     // Parse the Json
     json apiJson = json::parse(apiRes);
 
@@ -268,6 +270,33 @@ json getLlamaChat(const std::string& systemPrompt, const std::vector<json>& conv
     };
 
     return responseJson;
+}
+
+std::string modelSelection(const std::string& model)
+{
+    if (model == "DeepSeekR1")
+    {
+        return DEEPSEEK_R1;
+    }
+    else if (model == "DeepSeekV3")
+    {
+        return DEEPSEEK_V3;
+    }
+
+    return LLAMA;
+}
+
+std::string jsonTrim(const std::string& response)
+{
+    if (response.size() == 0)
+    {
+        return response;
+    }
+
+    size_t startIdx = response.find('{');
+    size_t endIdx = response.find_last_of('}');
+
+    return response.substr(startIdx, (endIdx - startIdx) + 1);
 }
 
 json getNewsAnalysis(const std::string& ticker, const std::string& model, const double ageLim)
@@ -361,10 +390,14 @@ json getNewsAnalysis(const std::string& ticker, const std::string& model, const 
     {
         json testPrompt = getLlamaPrompt(prompt, model);
 
+        //std::cout << testPrompt["response"].get<std::string>() << std::endl;
+        //std::cout << "TRIMMED: " << jsonTrim(testPrompt["response"].get<std::string>()) << std::endl;
+
         try
         {
-            std::cout << testPrompt["response"].get<std::string>() << std::endl;
-            responseLlama = json::parse(testPrompt["response"].get<std::string>());
+            responseLlama = json::parse(jsonTrim(testPrompt["response"].get<std::string>()));
+
+            //std::cout << responseLlama << std::endl;
 
             if (!responseLlama.empty())
             {
@@ -420,10 +453,13 @@ json getChatCompletion(const std::vector<json>& conversation, const std::string&
     {
         json testPrompt = getLlamaChat(systemPrompt, conversation, model);
 
+        //std::cout << testPrompt << std::endl;
+
         try
         {
-            std::cout << testPrompt["response"].get<std::string>() << std::endl;
-            json responseLlama = json::parse(testPrompt["response"].get<std::string>());
+            //std::cout << "TRIMMED CHAT: " << jsonTrim(testPrompt["response"].get<std::string>()) << std::endl;
+
+            json responseLlama = json::parse(jsonTrim(testPrompt["response"].get<std::string>()));
 
             if (!responseLlama.empty())
             {
