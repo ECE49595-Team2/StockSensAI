@@ -226,6 +226,50 @@ json getLlamaPrompt(const std::string& prompt, const std::string& model)
     return responseJson;
 }
 
+json getLlamaChat(const std::string& systemPrompt, const std::vector<json>& conversation, const std::string& model)
+{
+    dotenv::init();
+
+    // Get the key using dotenv
+    std::string openRouterKey = getenv("OPEN_ROUTER_API_KEY");
+
+    // Return Null if there is no proper key enviorment variable
+    if (openRouterKey == "")
+    {
+        return NULL;
+    }
+
+    // Initialize OpenRouter API call body content
+    json jsonPrompt;
+    jsonPrompt["model"] = model;
+    json message;
+    message["role"] = "system";
+    message["content"] = systemPrompt;
+    jsonPrompt["messages"].push_back(message);
+
+    // push the whole conversation to the messages now
+    for (size_t i = 0; i < conversation.size(); i++)
+    {
+        jsonPrompt["messages"].push_back(conversation[i]);
+    }
+
+    // Create a json string properly formatted with the prompt
+    std::string jsonPromptString = jsonPrompt.dump();
+
+    // Call the get api with the prompt and api key authentication
+    std::string apiRes = callExternalApiPost(OPEN_ROUTER_ENDPOINT, "POST", jsonPromptString, openRouterKey);
+
+    // Parse the Json
+    json apiJson = json::parse(apiRes);
+
+    json responseJson = {
+        {"status", "success"},
+        {"response", apiJson["choices"][0]["message"]["content"]}
+    };
+
+    return responseJson;
+}
+
 json getNewsAnalysis(const std::string& ticker, const std::string& model, const double ageLim)
 {
     // Get initial article info
@@ -347,6 +391,73 @@ json getNewsAnalysis(const std::string& ticker, const std::string& model, const 
         {"reasoning", responseLlama["reasoning"].get<std::string>()},
         {"source_data", promptArticleJson}
     };
+
+    return responseJson;
+}
+
+json getChatCompletion(const std::vector<json>& conversation, const std::string& model)
+{
+    // Layout the system prompt response format
+    json systemPromptFormatJson = {
+        {"response", "CHAT RESPONSE TO THE PREVIOUS USER MESSAGE"},
+        {"news_analysis", "TO CHECK NEWS ON A STOCK IF NEEDED ENTER: yes/no"},
+        {"ticker", "TICKER SYMBOL FOR NEWS ANALYSIS ENTER \"NULL\" IF NEWS_ANALYSIS IS NO"}
+    };
+
+    // Generate the system prompt
+    std::string systemPrompt = "You are an expert investor that chats and gives advice to the user. Assume that all current news about a stock is derived from the information extracted by the news analysis function. In other words, give useful information about a stock, just not hard current facts (that is assumed to come from the news analysis function).";
+    systemPrompt += "\n\n";
+    systemPrompt += "Your format will PURELY be in json using this template (no extra info outside of json notation):\n";
+    systemPrompt += systemPromptFormatJson.dump();
+
+    std::string action;
+    std::string ticker;
+    std::string response;
+    bool improperResponse = true;
+
+    // Check for a proper response using a while loop that sanitizes formatting
+    while (improperResponse)
+    {
+        json testPrompt = getLlamaChat(systemPrompt, conversation, model);
+
+        try
+        {
+            std::cout << testPrompt["response"].get<std::string>() << std::endl;
+            json responseLlama = json::parse(testPrompt["response"].get<std::string>());
+
+            if (!responseLlama.empty())
+            {
+                // Check if the response contains the expected action and reasoning
+                action = responseLlama["news_analysis"].get<std::string>();
+                ticker = responseLlama["ticker"].get<std::string>();
+                response = responseLlama["response"].get<std::string>();
+
+                // Check if the action is one of the expected values
+                if (action == "yes" || action == "no")
+                {
+                    improperResponse = false;
+                }
+            }
+        }
+        catch (const json::exception& e)
+        {
+            std::cerr << "Json response from Llama Chat Invalid Retrying..." << std::endl;
+        }
+    }
+
+    // Format the response json
+    json responseJson = {
+        {"response", response}
+    };
+
+    json analysis = NULL;
+
+    if (action == "yes")
+    {
+        analysis = getNewsAnalysis(ticker, model);
+
+        responseJson["analysis"] = analysis;
+    }
 
     return responseJson;
 }

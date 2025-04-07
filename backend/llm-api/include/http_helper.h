@@ -27,6 +27,7 @@ struct HTTPResponse
 
 std::vector<std::string> split(std::string& s, std::string& del);
 
+bool headerContentCheck(const std::string& request);
 HTTPMessage parseHTTPMessage(const std::string& message);
 
 std::string contentTypeToString(ContentType contentType);
