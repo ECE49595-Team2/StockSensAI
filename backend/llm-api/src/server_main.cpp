@@ -130,9 +130,9 @@ void handle_post_request(HTTPMessage headerData, HTTPResponse* response)
             
             std::string model = LLAMA;
 
-            if (requestJson["model"].get<std::string>() == "DeepSeek")
+            if (requestJson.find("model") != requestJson.end())
             {
-                model = DEEPSEEK;
+                model = modelSelection(requestJson["model"].get<std::string>());
             }
 
             std::cout << prompt << std::endl;
@@ -165,9 +165,9 @@ void handle_post_request(HTTPMessage headerData, HTTPResponse* response)
 
             std::string model = LLAMA;
 
-            if (requestJson.find("model") != requestJson.end() && requestJson["model"].get<std::string>() == "DeepSeek")
+            if (requestJson.find("model") != requestJson.end())
             {
-                model = DEEPSEEK;
+                model = modelSelection(requestJson["model"].get<std::string>());
             }
 
             json responseJson = getNewsAnalysis(ticker, model, timeLim);
@@ -190,9 +190,9 @@ void handle_post_request(HTTPMessage headerData, HTTPResponse* response)
 
             std::string model = LLAMA;
 
-            if (requestJson.find("model") != requestJson.end() && requestJson["model"].get<std::string>() == "DeepSeek")
+            if (requestJson.find("model") != requestJson.end())
             {
-                model = DEEPSEEK;
+                model = modelSelection(requestJson["model"].get<std::string>());
             }
 
             json responseJson = getChatCompletion(conversation, model);
