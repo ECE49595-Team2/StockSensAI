@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 from alpaca_trade_api.rest import APIError
+import requests
 
 load_dotenv()
 
@@ -45,34 +46,47 @@ def generate_signals(df):
     return df
 
 
-def execute_trade(symbol, signal):
+def execute_trade(symbol, signal, user_id, api_key):
     try:
-        position = api.get_position(symbol)
-        qty = abs(int(float(position.qty)))
+        session = requests.Session()
+        url = "http://127.0.0.1:8000/get_positions"
+        params = {"user_id": user_id, "api_key": api_key, "symbol": symbol}
+
+        response = session.get(url, cookies=session.cookies.get_dict(), params=params)
+        qty = response.json()["qty"]
     except APIError:
         qty = 0
 
     if signal == 1:  # Buy
         if qty == 0:  # Only buy if no existing position
-            api.submit_order(symbol=symbol, qty=1, side="buy", type="market", time_in_force="gtc")
-            print(f"Bought {symbol}")
+            session = requests.Session()
+            url = "http://127.0.0.1:8000/buy"
+            params = {"stock": "AAPL", "quantity": 1, "automatic": True, "user_id": user_id, "api_key": api_key}
+
+            response = session.post(url, cookies=session.cookies.get_dict(), params=params)
+            print(response.json())
+        else:
+            print(f"Buy signal active for symbol {symbol}")
 
     elif signal == -1:  # Sell
         if qty > 0:  # Only sell if currently holding the stock
-            api.submit_order(symbol=symbol, qty=qty, side="sell", type="market", time_in_force="gtc")
-            print(f"Sold {symbol}")
+            session = requests.Session()
+            url = "http://127.0.0.1:8000/sell"
+            params = {"stock": "AAPL", "quantity": qty, "automatic": True, "user_id": user_id, "api_key": api_key}
+
+            response = session.post(url, cookies=session.cookies.get_dict(), params=params)
+            print(response.json())
+        else:
+            print(f"Sell signal active for symbol {symbol}")
 
 
-def run_strategy(symbol):
-    while True:
-        df = get_historical_data(symbol)
-        df = calculate_moving_averages(df)
-        df = generate_signals(df)
+def run_strategy(symbol, user_id, api_key):
+    df = get_historical_data(symbol)
+    df = calculate_moving_averages(df)
+    df = generate_signals(df)
 
-        latest_signal = df["Signal"].iloc[-1]
-        execute_trade(symbol, latest_signal)
-
-        time.sleep(60)  # Wait before checking again
+    latest_signal = df["Signal"].iloc[-1]
+    execute_trade(symbol, latest_signal, user_id, api_key)
 
 
 def SMA_visualizer():

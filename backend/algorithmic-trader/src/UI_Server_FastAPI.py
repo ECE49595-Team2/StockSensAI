@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, Request, HTTPException
+from fastapi import FastAPI, Depends, Request, HTTPException, Query
 from pydantic import BaseModel
 import couchdb
 from datetime import datetime, timedelta
@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import alpaca_trade_api as tradeapi
 from typing import List, Dict
 import requests
+from apscheduler.schedulers.background import BackgroundScheduler
+from Simple_Moving_Average import run_strategy
 
 load_dotenv()
 
@@ -15,9 +17,9 @@ API_SECRET = os.environ.get("ALPACA_API_SECRET", os.getenv("ALPACA_API_SECRET"))
 api = tradeapi.REST(API_KEY, API_SECRET, base_url="https://paper-api.alpaca.markets")
 
 # for local testing
-# COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
+COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
 # for deployment
-COUCHDB_URL = "http://database:5984"
+# COUCHDB_URL = "http://database:5984"
 
 DB_NAME = "_users"
 server = couchdb.Server(COUCHDB_URL)
@@ -81,13 +83,62 @@ def get_user_from_cookie(request: Request):
     user_id = session_data["userCtx"]["name"]
     return user_id
 
+def validate_api_key(user_id: str, api_key: str):
+    couchdb_user_id = f"org.couchdb.user:{user_id}"
+    user_doc = db.get(couchdb_user_id)
+    if not user_doc:
+        return False
+    stored_key = user_doc["api_key"]
+    if(stored_key != api_key):
+        return False
+    return True
+
 
 app = FastAPI()
-
+scheduler = BackgroundScheduler()
+scheduler.start()
+jobs = {}
 
 @app.get("/")
 def read_root():
     return {"message": "FastAPI with Docker!"}
+
+
+@app.post("/start_strategy")
+def start_strategy(strategy_id: str, user_id: str, symbol: str, api_key: str):
+    """Start a new strategy"""
+    if strategy_id in jobs:
+        return {"message": "Strategy already running"}
+    
+    job = scheduler.add_job(run_strategy, "interval", seconds=60, args=[symbol, user_id, api_key], id=strategy_id)
+    jobs[strategy_id] = job
+    return {"message": f"Started strategy {strategy_id} for user {user_id}"}
+
+
+@app.post("/stop_strategy")
+def stop_strategy(strategy_id: str):
+    """Stop a running strategy"""
+    job = jobs.pop(strategy_id, None)
+    if job:
+        job.remove()
+        return {"message": f"Stopped strategy {strategy_id}"}
+    return {"message": "Strategy not found"}
+
+
+@app.get("/get_positions")
+def get_stock_position(user_id: str, api_key: str, symbol: str):
+    try:
+        success = validate_api_key(user_id, api_key)
+        if not success:
+            raise HTTPException(status_code=403, detail="Invalid API key/user ID combo")
+        couchdb_user_id = f"org.couchdb.user:{user_id}"
+        user_doc = db.get(couchdb_user_id)
+        positions = user_doc.get("positions", {})
+        if(symbol in positions):
+            return {"qty": positions[symbol]}
+        return {"qty": 0}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/update-account-history")
@@ -187,8 +238,29 @@ async def update_account_history(request: Request, user_id: str = Depends(get_us
 
 
 @app.post("/buy")
-async def buy_order(request: Request, stock: str, quantity: float, user_id: str = Depends(get_user_from_cookie)):
+async def buy_order(
+    request: Request,
+    stock: str,
+    quantity: float,
+    automatic: bool = Query(False),
+    api_key: str = None,  # Only used for automatic trades
+    user_id: str = None
+):
     try:
+        if automatic:
+            if not api_key or not user_id:
+                raise HTTPException(status_code=400, detail="API key and user ID required for automatic trades")
+
+            success = validate_api_key(user_id, api_key)
+            if not success:
+                raise HTTPException(status_code=403, detail="Invalid API key/user ID combo")
+        else:
+            user_id = get_user_from_cookie(request)
+
+        # user_id should either be from parameter or get_user_from_cookie at this point
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID is required")
+        
         couchdb_user_id = f"org.couchdb.user:{user_id}"
         user_doc = db.get(couchdb_user_id)
         if not user_doc:
@@ -196,6 +268,7 @@ async def buy_order(request: Request, stock: str, quantity: float, user_id: str 
         
         transactions = user_doc.get("transactions", {})
         stock_prices = get_stock_prices([stock])
+        positions = user_doc.get("positions", {})
 
         current_time = datetime.now().isoformat()
 
@@ -205,7 +278,12 @@ async def buy_order(request: Request, stock: str, quantity: float, user_id: str 
         transactions[stock].append(new_transaction)
         user_doc["transactions"] = transactions
 
+        positions[stock] = positions.get(stock, 0) + quantity
+        user_doc["positions"] = positions
+
         new_buying_power = user_doc.get("buying_power", [[100000, "dummy"]])[-1][0] - (stock_prices.get(stock, 0) * quantity)
+        if(new_buying_power < 0):
+            raise HTTPException(status_code=400, detail="Not enough buying power to buy quantity of stock")
         user_doc["buying_power"].append([new_buying_power, current_time]) 
         db.save(user_doc)
 
@@ -216,8 +294,29 @@ async def buy_order(request: Request, stock: str, quantity: float, user_id: str 
 
 
 @app.post("/sell")
-async def sell_order(request: Request, stock: str, quantity: float, user_id: str = Depends(get_user_from_cookie)):
+async def sell_order(
+    request: Request,
+    stock: str,
+    quantity: float,
+    automatic: bool = Query(False),
+    api_key: str = None,  # Only used for automatic trades
+    user_id: str = None
+):
     try:
+        if automatic:
+            if not api_key or not user_id:
+                raise HTTPException(status_code=400, detail="API key and user ID required for automatic trades")
+
+            success = validate_api_key(user_id, api_key)
+            if not success:
+                raise HTTPException(status_code=403, detail="Invalid API key/user ID combo")
+        else:
+            user_id = get_user_from_cookie(request)
+
+        # user_id should either be from api_key or get_user_from_cookie at this point
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID is required")
+
         couchdb_user_id = f"org.couchdb.user:{user_id}"
         user_doc = db.get(couchdb_user_id)
         if not user_doc:
@@ -225,14 +324,23 @@ async def sell_order(request: Request, stock: str, quantity: float, user_id: str
         
         transactions = user_doc.get("transactions", {})
         stock_prices = get_stock_prices([stock])
+        positions = user_doc.get("positions", {})
 
         current_time = datetime.now().isoformat()
+
+        if(stock not in positions):
+            raise HTTPException(status_code=400, detail="Cannot sell stock not in portfolio")
+        elif(positions[stock] < quantity):
+            raise HTTPException(status_code=400, detail="Cannot sell more stock than owned")
 
         new_transaction = {"type": "Sell", "quantity": quantity, "price": stock_prices.get(stock, 0), "timestamp": current_time}
         if stock not in transactions:
             transactions[stock] = []
         transactions[stock].append(new_transaction)
         user_doc["transactions"] = transactions
+
+        positions[stock] -= quantity
+        user_doc["positions"] = positions
 
         new_buying_power = user_doc.get("buying_power", [[100000, "dummy"]])[-1][0] + (stock_prices.get(stock, 0) * quantity)
         user_doc["buying_power"].append([new_buying_power, current_time]) 
