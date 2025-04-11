@@ -10,6 +10,13 @@
 
 using json = nlohmann::json;
 
+struct StockPosition
+{
+    std::string ticker;
+    int count;
+    double percentChange;
+};
+
 // Define a constant endpoints
 const std::string OPEN_ROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const std::string POLYGON_ENDPOINT = "https://api.polygon.io/v2";
@@ -42,5 +49,8 @@ json getNewsAnalysis(const std::string& ticker, const std::string& model, const 
 
 // Chat completion function
 json getChatCompletion(const std::vector<json>& conversation, const std::string& model);
+
+// One sentence summary function
+json oneSentenceSummary(const json& positions, const std::string& model);
 
 #endif

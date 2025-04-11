@@ -497,3 +497,61 @@ json getChatCompletion(const std::vector<json>& conversation, const std::string&
 
     return responseJson;
 }
+
+json oneSentenceSummary(const json& positions, const std::string& model)
+{
+    // Layout the system prompt response format
+    json systemPromptFormatJson = {
+        {"response", "ONE TO TWO SENTENCE SUMMARY OF THE PORTFOLIO"}
+    };
+
+    // Generate the system prompt
+    std::string systemPrompt = "You are an expert investor that summarizes a json input of user stocks [{ticker, count, day gain percentage}]. Give a 1-2 sentence summary of the state of the portfolio today.";
+    systemPrompt += "\n\n";
+    systemPrompt += "Your format will PURELY be in json using this template (no extra info outside of json notation):\n";
+    systemPrompt += systemPromptFormatJson.dump();
+
+    std::vector<json> conversation;
+    
+    conversation.push_back({
+        {"role", "user"},
+        {"content", positions.dump()}
+    });
+
+    std::string response;
+    bool improperResponse = true;
+
+    // Check for a proper response using a while loop that sanitizes formatting
+    while (improperResponse)
+    {
+        json testPrompt = getLlamaChat(systemPrompt, conversation, model);
+
+        std::cout << testPrompt << std::endl;
+
+        try
+        {
+            std::cout << "TRIMMED CHAT: " << jsonTrim(testPrompt["response"].get<std::string>()) << std::endl;
+
+            json responseLlama = json::parse(jsonTrim(testPrompt["response"].get<std::string>()));
+
+            if (!responseLlama.empty())
+            {
+                // Check if the response contains the expected action and reasoning
+                response = responseLlama["response"].get<std::string>();
+
+                improperResponse = false;
+            }
+        }
+        catch (const json::exception& e)
+        {
+            std::cerr << "Json response from Llama Chat Invalid Retrying..." << std::endl;
+        }
+    }
+
+    // Format the response json
+    json responseJson = {
+        {"response", response}
+    };
+
+    return responseJson;
+}

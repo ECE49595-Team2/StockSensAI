@@ -188,6 +188,7 @@ void handle_post_request(HTTPMessage headerData, HTTPResponse* response)
             json requestJson = json::parse(headerData.body);
             std::vector<json> conversation = requestJson["conversation"].get<std::vector<json>>();
 
+            // Model choosing and handling
             std::string model = LLAMA;
 
             if (requestJson.find("model") != requestJson.end())
@@ -202,6 +203,33 @@ void handle_post_request(HTTPMessage headerData, HTTPResponse* response)
         catch (const std::exception& e)
         {
             std::cerr << "Error getting analysis: " << e.what() << std::endl;
+            badRequestResponse(response);
+        }
+    }
+    else if (headerData.path == "/summary")
+    {
+        try
+        {
+            // Get the ticker from the request body
+            json requestJson = json::parse(headerData.body);
+            
+            // Model choosing and handling
+            std::string model = LLAMA;
+
+            if (requestJson.find("model") != requestJson.end())
+            {
+                model = modelSelection(requestJson["model"].get<std::string>());
+            }
+
+            requestJson.erase("model");
+
+            json responseJson = oneSentenceSummary(requestJson, model);
+
+            genericResponse(response, 200, JSON, responseJson.dump());
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Error getting summary: " << e.what() << std::endl;
             badRequestResponse(response);
         }
     }
