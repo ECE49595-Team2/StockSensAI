@@ -46,11 +46,11 @@ def generate_signals(df):
     return df
 
 
-def execute_trade(symbol, signal, user_id, api_key):
+def execute_trade(symbol, signal, portfolio_id):
     try:
         session = requests.Session()
         url = "http://127.0.0.1:8000/get_positions"
-        params = {"user_id": user_id, "api_key": api_key, "symbol": symbol}
+        params = {"portfolio_id": portfolio_id,"symbol": symbol}
 
         response = session.get(url, cookies=session.cookies.get_dict(), params=params)
         qty = response.json()["qty"]
@@ -61,32 +61,26 @@ def execute_trade(symbol, signal, user_id, api_key):
         if qty == 0:  # Only buy if no existing position
             session = requests.Session()
             url = "http://127.0.0.1:8000/buy"
-            params = {"stock": "AAPL", "quantity": 1, "automatic": True, "user_id": user_id, "api_key": api_key}
+            params = {"portfolio_id": portfolio_id, "symbol": symbol, "quantity": qty}
 
             response = session.post(url, cookies=session.cookies.get_dict(), params=params)
-            print(response.json())
-        else:
-            print(f"Buy signal active for symbol {symbol}")
 
     elif signal == -1:  # Sell
         if qty > 0:  # Only sell if currently holding the stock
             session = requests.Session()
             url = "http://127.0.0.1:8000/sell"
-            params = {"stock": "AAPL", "quantity": qty, "automatic": True, "user_id": user_id, "api_key": api_key}
+            params = {"portfolio_id": portfolio_id, "symbol": symbol, "quantity": qty}
 
             response = session.post(url, cookies=session.cookies.get_dict(), params=params)
-            print(response.json())
-        else:
-            print(f"Sell signal active for symbol {symbol}")
 
 
-def run_strategy(symbol, user_id, api_key):
+def run_strategy(symbol, portfolio_id):
     df = get_historical_data(symbol)
     df = calculate_moving_averages(df)
     df = generate_signals(df)
 
     latest_signal = df["Signal"].iloc[-1]
-    execute_trade(symbol, latest_signal, user_id, api_key)
+    execute_trade(symbol, latest_signal, portfolio_id)
 
 
 def SMA_visualizer():

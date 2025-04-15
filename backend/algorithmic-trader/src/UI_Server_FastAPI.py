@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, Request, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import couchdb
 from datetime import datetime, timedelta
@@ -6,9 +6,9 @@ import os
 from dotenv import load_dotenv
 import alpaca_trade_api as tradeapi
 from typing import List, Dict
-import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from Simple_Moving_Average import run_strategy
+import uuid
 
 load_dotenv()
 
@@ -17,11 +17,13 @@ API_SECRET = os.environ.get("ALPACA_API_SECRET", os.getenv("ALPACA_API_SECRET"))
 api = tradeapi.REST(API_KEY, API_SECRET, base_url="https://paper-api.alpaca.markets")
 
 # for local testing
-COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
+# COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
 # for deployment
-# COUCHDB_URL = "http://database:5984"
+COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
+COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
+COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
 
-DB_NAME = "_users"
+DB_NAME = "portfolio"
 server = couchdb.Server(COUCHDB_URL)
 if DB_NAME not in server:
     db = server.create(DB_NAME)
@@ -63,41 +65,11 @@ def get_stock_prices(symbols):
     return prices
 
 
-def get_user_from_cookie(request: Request):
-    """Extracts the user ID from the AuthSession cookie."""
-    auth_cookie = request.cookies.get("AuthSession")
-    if not auth_cookie:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    # Query CouchDB for the session info
-    headers = {"Cookie": f"AuthSession={auth_cookie}"}
-    response = requests.get(f"{COUCHDB_URL}/_session", headers=headers)
-    
-    if response.status_code != 200:
-        raise HTTPException(status_code=401, detail="Invalid session")
-
-    session_data = response.json()
-    if not session_data.get("ok"):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    user_id = session_data["userCtx"]["name"]
-    return user_id
-
-def validate_api_key(user_id: str, api_key: str):
-    couchdb_user_id = f"org.couchdb.user:{user_id}"
-    user_doc = db.get(couchdb_user_id)
-    if not user_doc:
-        return False
-    stored_key = user_doc["api_key"]
-    if(stored_key != api_key):
-        return False
-    return True
-
-
 app = FastAPI()
 scheduler = BackgroundScheduler()
 scheduler.start()
 jobs = {}
+
 
 @app.get("/")
 def read_root():
@@ -105,34 +77,54 @@ def read_root():
 
 
 @app.post("/start_strategy")
-def start_strategy(strategy_id: str, user_id: str, symbol: str, api_key: str):
+def start_strategy(portfolio_id: str, symbol: str):
     """Start a new strategy"""
-    if strategy_id in jobs:
-        return {"message": "Strategy already running"}
-    
-    job = scheduler.add_job(run_strategy, "interval", seconds=60, args=[symbol, user_id, api_key], id=strategy_id)
-    jobs[strategy_id] = job
-    return {"message": f"Started strategy {strategy_id} for user {user_id}"}
+    try:
+        user_doc = db.get(portfolio_id)
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        strategy = user_doc.get("strategy_id", "")
+        if(strategy != ""):
+            raise HTTPException(status_code=400, detail="A strategy is already running")
+        strategy_id = str(uuid.uuid4())
+        user_doc["strategy_id"] = strategy_id
+        db.save(user_doc)
+        
+        job = scheduler.add_job(run_strategy, "interval", seconds=60, args=[symbol, portfolio_id], id=strategy_id)
+        jobs[strategy_id] = job
+        return {"message": f"Started strategy {strategy_id} for portfolio {portfolio_id}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/stop_strategy")
-def stop_strategy(strategy_id: str):
+def stop_strategy(portfolio_id: str):
     """Stop a running strategy"""
-    job = jobs.pop(strategy_id, None)
-    if job:
-        job.remove()
-        return {"message": f"Stopped strategy {strategy_id}"}
-    return {"message": "Strategy not found"}
+    try:
+        user_doc = db.get(portfolio_id)
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        strategy_id = user_doc.get("strategy_id", "")
+        if(strategy_id == ""):
+            raise HTTPException(status_code=400, detail="No strategy is running in this portfolio")
+        job = jobs.pop(strategy_id, None)
+        user_doc["strategy_id"] = ""
+        db.save(user_doc)
+        if job:
+            job.remove()
+            return {"message": f"Stopped strategy {strategy_id}"}
+        else:
+            raise HTTPException(status_code=500, detail="Strategy_id unable to be found in dict, this should not happen")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/get_positions")
-def get_stock_position(user_id: str, api_key: str, symbol: str):
+def get_stock_position(portfolio_id: str, symbol: str):
     try:
-        success = validate_api_key(user_id, api_key)
-        if not success:
-            raise HTTPException(status_code=403, detail="Invalid API key/user ID combo")
-        couchdb_user_id = f"org.couchdb.user:{user_id}"
-        user_doc = db.get(couchdb_user_id)
+        user_doc = db.get(portfolio_id)
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
         positions = user_doc.get("positions", {})
         if(symbol in positions):
             return {"qty": positions[symbol]}
@@ -142,13 +134,12 @@ def get_stock_position(user_id: str, api_key: str, symbol: str):
 
 
 @app.post("/update-account-history")
-async def update_account_history(request: Request, user_id: str = Depends(get_user_from_cookie)):
+async def update_account_history(portfolio_id: str):
     """Updates the user's account value history based on their owned stocks."""
     try:
-        couchdb_user_id = f"org.couchdb.user:{user_id}"
-        user_doc = db.get(couchdb_user_id)
+        user_doc = db.get(portfolio_id)
         if not user_doc:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=404, detail="Portfolio not found")
 
         transactions = user_doc.get("transactions", {})
         buying_power = user_doc.get("buying_power", [])
@@ -176,6 +167,7 @@ async def update_account_history(request: Request, user_id: str = Depends(get_us
             closing_prices = {}
 
         for x in range(6):
+            weekend = False
             total_value = 0
             day = datetime.now() - timedelta(days=6-x)
             formatted_day = day.strftime("%Y-%m-%d")
@@ -187,23 +179,31 @@ async def update_account_history(request: Request, user_id: str = Depends(get_us
 
             for stock,value in transactions.items():
                 for transaction in value:
-                    if(datetime.fromisoformat(transaction["timestamp"]) < day and transaction["type"] == "Buy"):
-                        total_value += closing_prices.loc[formatted_day, stock] * transaction["quantity"]
-                    elif(datetime.fromisoformat(transaction["timestamp"]) < day and transaction["type"] == "Sell"):
-                        total_value -= closing_prices.loc[formatted_day, stock] * transaction["quantity"]
+                    price = closing_prices.loc[formatted_day, stock] if formatted_day in closing_prices.index else None
+                    if(price is not None):
+                        if(datetime.fromisoformat(transaction["timestamp"]) < day and transaction["type"] == "Buy"):
+                            total_value += closing_prices.loc[formatted_day, stock] * transaction["quantity"]
+                        elif(datetime.fromisoformat(transaction["timestamp"]) < day and transaction["type"] == "Sell"):
+                            total_value -= closing_prices.loc[formatted_day, stock] * transaction["quantity"]
+                    else:
+                        total_value = historical_data[x-1]["value"] #default to previous values
+                        weekend = True
             
             latest_buying_power = -1000000
             for moneys in buying_power:
                 if(datetime.fromisoformat(moneys[1]) < day):
                     latest_buying_power = moneys[0]
             if(latest_buying_power == -1000000):
-                total_value += 100000 #no buying power set, before account was created
+                if(weekend == False):
+                    total_value += 100000 #no buying power set, before account was created
             else:
-                total_value += latest_buying_power
+                if(weekend == False):
+                    total_value += latest_buying_power
             
             historical_data_point = {"timestamp": formatted_day, "value": total_value}
             historical_data.append(historical_data_point)
 
+        weekend = False
         #last data point is current value
         total_value = 0
         day = datetime.now()
@@ -211,19 +211,26 @@ async def update_account_history(request: Request, user_id: str = Depends(get_us
         current_values = get_stock_prices(transactions.keys())
         for stock,value in transactions.items():
                 for transaction in value:
-                    if(transaction["type"] == "Buy"):
-                        total_value += current_values[stock] * transaction["quantity"]
-                    elif(transaction["type"] == "Sell"):
-                        total_value -= current_values[stock] * transaction["quantity"]
+                    price = current_values[stock] if stock in current_values else None
+                    if(price is not None):
+                        if(transaction["type"] == "Buy"):
+                            total_value += current_values[stock] * transaction["quantity"]
+                        elif(transaction["type"] == "Sell"):
+                            total_value -= current_values[stock] * transaction["quantity"]
+                    else:
+                        total_value = historical_data[x-1]["value"]
+                        weekend = True
 
         latest_buying_power = -1000000
         for moneys in buying_power:
             if(datetime.fromisoformat(moneys[1]) < day):
                 latest_buying_power = moneys[0]
         if(latest_buying_power == -1000000):
-            total_value += 100000 #no buying power set, before account was created
+            if(weekend == False):
+                total_value += 100000 #no buying power set, before account was created
         else:
-            total_value += latest_buying_power
+            if(weekend == False):
+                total_value += latest_buying_power
         
         historical_data_point = {"timestamp": formatted_day, "value": total_value}
         historical_data.append(historical_data_point)
@@ -238,53 +245,35 @@ async def update_account_history(request: Request, user_id: str = Depends(get_us
 
 
 @app.post("/buy")
-async def buy_order(
-    request: Request,
-    stock: str,
-    quantity: float,
-    automatic: bool = Query(False),
-    api_key: str = None,  # Only used for automatic trades
-    user_id: str = None
-):
+async def buy_order(portfolio_id: str, symbol: str, quantity: float):
     try:
-        if automatic:
-            if not api_key or not user_id:
-                raise HTTPException(status_code=400, detail="API key and user ID required for automatic trades")
-
-            success = validate_api_key(user_id, api_key)
-            if not success:
-                raise HTTPException(status_code=403, detail="Invalid API key/user ID combo")
-        else:
-            user_id = get_user_from_cookie(request)
-
-        # user_id should either be from parameter or get_user_from_cookie at this point
-        if not user_id:
-            raise HTTPException(status_code=400, detail="User ID is required")
-        
-        couchdb_user_id = f"org.couchdb.user:{user_id}"
-        user_doc = db.get(couchdb_user_id)
+        user_doc = db.get(portfolio_id)
         if not user_doc:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=404, detail="Portfolio not found")
         
         transactions = user_doc.get("transactions", {})
-        stock_prices = get_stock_prices([stock])
+        stock_prices = get_stock_prices([symbol])
         positions = user_doc.get("positions", {})
 
         current_time = datetime.now().isoformat()
 
-        new_transaction = {"type": "Buy", "quantity": quantity, "price": stock_prices.get(stock, 0), "timestamp": current_time}
-        if stock not in transactions:
-            transactions[stock] = []
-        transactions[stock].append(new_transaction)
+        new_transaction = {"type": "Buy", "quantity": quantity, "price": stock_prices.get(symbol, 0), "timestamp": current_time}
+        if symbol not in transactions:
+            transactions[symbol] = []
+        transactions[symbol].append(new_transaction)
         user_doc["transactions"] = transactions
 
-        positions[stock] = positions.get(stock, 0) + quantity
+        positions[symbol] = positions.get(symbol, 0) + quantity
         user_doc["positions"] = positions
 
-        new_buying_power = user_doc.get("buying_power", [[100000, "dummy"]])[-1][0] - (stock_prices.get(stock, 0) * quantity)
+        new_buying_power = user_doc.get("buying_power", [[100000, "dummy"]])[-1][0] - (stock_prices.get(symbol, 0) * quantity)
+        new_buying_list = user_doc.get("buying_power", {})
         if(new_buying_power < 0):
             raise HTTPException(status_code=400, detail="Not enough buying power to buy quantity of stock")
-        user_doc["buying_power"].append([new_buying_power, current_time]) 
+        if(new_buying_list):
+            user_doc["buying_power"].append([new_buying_power, current_time])
+        else:
+            user_doc["buying_power"] = [[new_buying_power, current_time]]
         db.save(user_doc)
 
         return {"message": "Bought stock", "transaction": new_transaction}
@@ -294,55 +283,33 @@ async def buy_order(
 
 
 @app.post("/sell")
-async def sell_order(
-    request: Request,
-    stock: str,
-    quantity: float,
-    automatic: bool = Query(False),
-    api_key: str = None,  # Only used for automatic trades
-    user_id: str = None
-):
+async def sell_order(portfolio_id: str, symbol: str, quantity: float):
     try:
-        if automatic:
-            if not api_key or not user_id:
-                raise HTTPException(status_code=400, detail="API key and user ID required for automatic trades")
-
-            success = validate_api_key(user_id, api_key)
-            if not success:
-                raise HTTPException(status_code=403, detail="Invalid API key/user ID combo")
-        else:
-            user_id = get_user_from_cookie(request)
-
-        # user_id should either be from api_key or get_user_from_cookie at this point
-        if not user_id:
-            raise HTTPException(status_code=400, detail="User ID is required")
-
-        couchdb_user_id = f"org.couchdb.user:{user_id}"
-        user_doc = db.get(couchdb_user_id)
+        user_doc = db.get(portfolio_id)
         if not user_doc:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=404, detail="Portfolio not found")
         
         transactions = user_doc.get("transactions", {})
-        stock_prices = get_stock_prices([stock])
+        stock_prices = get_stock_prices([symbol])
         positions = user_doc.get("positions", {})
 
         current_time = datetime.now().isoformat()
 
-        if(stock not in positions):
+        if(symbol not in positions):
             raise HTTPException(status_code=400, detail="Cannot sell stock not in portfolio")
-        elif(positions[stock] < quantity):
+        elif(positions[symbol] < quantity):
             raise HTTPException(status_code=400, detail="Cannot sell more stock than owned")
 
-        new_transaction = {"type": "Sell", "quantity": quantity, "price": stock_prices.get(stock, 0), "timestamp": current_time}
-        if stock not in transactions:
-            transactions[stock] = []
-        transactions[stock].append(new_transaction)
+        new_transaction = {"type": "Sell", "quantity": quantity, "price": stock_prices.get(symbol, 0), "timestamp": current_time}
+        if symbol not in transactions:
+            transactions[symbol] = []
+        transactions[symbol].append(new_transaction)
         user_doc["transactions"] = transactions
 
-        positions[stock] -= quantity
+        positions[symbol] -= quantity
         user_doc["positions"] = positions
 
-        new_buying_power = user_doc.get("buying_power", [[100000, "dummy"]])[-1][0] + (stock_prices.get(stock, 0) * quantity)
+        new_buying_power = user_doc.get("buying_power", [[100000, "dummy"]])[-1][0] + (stock_prices.get(symbol, 0) * quantity)
         user_doc["buying_power"].append([new_buying_power, current_time]) 
         db.save(user_doc)
 
