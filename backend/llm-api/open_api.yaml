@@ -1,0 +1,119 @@
+openapi: 3.0.0
+info:
+  title: API Service
+  version: 1.0.0
+  description: API for news analysis and chat functionality
+servers:
+  - url: http://localhost:8011
+    description: Local development server
+paths:
+  /newsAnalysis:
+    post:
+      summary: Get news analysis for a given ticker
+      parameters:
+        - name: ticker
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Stock ticker symbol to analyze news for
+        - name: model
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [DeepSeekR1, DeepSeekV3, LLAMA]
+            default: LLAMA
+          description: AI model to use for analysis
+        - name: ageLim
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+            default: 0
+          description: Age limit (in seconds) for news articles to consider
+      responses:
+        '200':
+          description: Successfully analyzed news
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  action:
+                    type: string
+                    enum: [buy, sell, hold]
+                    description: The recommended action
+                  reasoning:
+                    type: string
+                    description: The rationale behind the recommendation
+                  sentiment_counts:
+                    type: object
+                    properties:
+                      negative:
+                        type: integer
+                        description: Count of negative sentiment articles
+                      neutral:
+                        type: integer
+                        description: Count of neutral sentiment articles
+                      positive:
+                        type: integer
+                        description: Count of positive sentiment articles
+                  model:
+                    type: string
+                    description: The model used for analysis
+              example:
+                action: "hold"
+                reasoning: "The sentiment analysis of recent articles on Tesla (TSLA) reveals a mixed outlook. While there are positive catalysts such as the stock's rebound after being added to a 'best ideas' list, strong performance in the battery energy storage market, and optimism around future initiatives like robotaxis, there are also significant concerns. These include a 13% drop in Q1 2025 deliveries, rising competition (especially from Chinese EV makers), CEO Elon Musk's political distractions, and bearish analyst predictions suggesting further downside. Given this balance of positive and negative factors, and the high uncertainty surrounding Tesla's near-term performance, a 'hold' position is advisable until clearer trends emerge."
+                sentiment_counts:
+                  negative: 5
+                  neutral: 3
+                  positive: 7
+                model: "LLAMA"
+        '400':
+          description: Bad request (e.g., missing ticker)
+
+  /chat:
+    post:
+      summary: Send a chat message to the AI model
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                conversation:
+                  type: array
+                  items:
+                    type: object
+                properties:
+                      role:
+                      type: string
+                        enum: [user, assistant]
+                        description: The role of the message sender
+                      content:
+                      type: string
+                        description: The message content
+                model:
+                  type: string
+                  enum: [DeepSeekR1, DeepSeekV3, LLAMA]
+                  default: LLAMA
+                  description: AI model to use for the response
+      responses:
+        '200':
+          description: Successful chat response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                    description: The AI's response
+                  model:
+                    type: string
+                    description: The model used for the response
+        '400':
+          description: Bad request (e.g., missing message)
