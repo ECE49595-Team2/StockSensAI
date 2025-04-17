@@ -1,9 +1,15 @@
 "use client";
 import { useUser } from "@/hooks/use-user";
+import User from "@/models/user-model";
 import { Skeleton } from "@/shadcn/ui/skeleton";
+import { useEffect } from "react";
+
 
 function DashboardWelcome() {
-    const user = useUser((state) => state.user);
+    const user = useUser((state) => state.user) as User;
+
+    useEffect(() => {
+    }, [user?.name, user?.email]);
 
     return (
         <>

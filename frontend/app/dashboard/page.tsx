@@ -3,11 +3,11 @@ import { Suspense } from "react";
 import { BalanceWidget } from "./components/dashboard-balance";
 import DashboardWelcome from "./components/dashboard-welcome";
 import { PortfolioValueWidget } from "./components/dashboad-portfolio-value";
-import { DashboardPerformance } from "./components/dashboard-performance";
 import { AdviserWidget } from "./components/dashboard-adviser";
 import { DashboardChart } from "./components/dashboard-chart";
 
 function Dashboard() {
+    
     return (
         <div className="text-black max-w-4xl mx-auto">
             <DashboardWelcome />
@@ -18,10 +18,7 @@ function Dashboard() {
                 <Suspense fallback={<Skeleton className="w-full h-30 bg-gray-200 col-span-2" />}>
                     <PortfolioValueWidget />
                 </Suspense>
-                <Suspense fallback={<Skeleton className="w-full h-30 bg-gray-200 col-span-3" />}>
-                    <DashboardPerformance />
-                </Suspense>
-                <Suspense fallback={<Skeleton className="w-full h-30 bg-gray-200 col-span-1" />}>
+                <Suspense fallback={<Skeleton className="w-full h-30 bg-gray-200 col-span-2" />}>
                     <AdviserWidget />
                 </Suspense>
                 <DashboardChart />

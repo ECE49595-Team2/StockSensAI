@@ -7,6 +7,7 @@ import Page from "@/components/new-page";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import User from "@/models/user-model";
 
 export default function Home() {
   return (
@@ -18,12 +19,23 @@ export default function Home() {
 
 function HomeContent() {
   const searchParams = useSearchParams();
+  const setUser = useUser((state) => state.setUser);
   const unauthorizedParam = searchParams.get('unauthorized');
-  const checkUserSession = useUser((state) => state.checkUserSession);
 
   useEffect(() => {
-    checkUserSession();
-  }, [checkUserSession, unauthorizedParam]);
+    fetch("/api/user/verify", {
+      method: "GET",
+      cache: "no-store",
+    }).then(async (response) => {
+      const data = await response.json();
+      if (response.ok && data.name !== null) {
+        const user = new User(data.email);
+        setUser(user);
+      } else {
+        setUser(undefined);
+      }
+    })
+  }, [unauthorizedParam, setUser]);
 
   useEffect(() => {
     const handleUnauthorized = () => {
