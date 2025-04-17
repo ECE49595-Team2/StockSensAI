@@ -4,35 +4,35 @@ info:
   version: 1.0.0
   description: API for news analysis and chat functionality
 servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/KevinDeWall/llm-backend/1.0.0
   - url: http://localhost:8011
     description: Local development server
 paths:
   /newsAnalysis:
     post:
       summary: Get news analysis for a given ticker
-      parameters:
-        - name: ticker
-          in: query
-          required: true
-          schema:
-            type: string
-          description: Stock ticker symbol to analyze news for
-        - name: model
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [DeepSeekR1, DeepSeekV3, LLAMA]
-            default: LLAMA
-          description: AI model to use for analysis
-        - name: ageLim
-          in: query
-          required: false
-          schema:
-            type: number
-            format: double
-            default: 0
-          description: Age limit (in seconds) for news articles to consider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                time_limit:
+                  type: number
+                  default: 0
+                  description: Time limit (in seconds for maximum article age, 0 for no time Limit)
+                ticker:
+                  type: string
+                  default: "TSLA"
+                  description: Ticker Symbol for the stock
+                model:
+                  type: string
+                  enum: [DeepSeekR1, DeepSeekV3, LLAMA]
+                  default: LLAMA
+                  description: AI model to use for the response
       responses:
         '200':
           description: Successfully analyzed news
@@ -73,7 +73,6 @@ paths:
                 model: "LLAMA"
         '400':
           description: Bad request (e.g., missing ticker)
-
   /chat:
     post:
       summary: Send a chat message to the AI model
@@ -88,13 +87,13 @@ paths:
                   type: array
                   items:
                     type: object
-                properties:
+                    properties:
                       role:
-                      type: string
+                        type: string
                         enum: [user, assistant]
                         description: The role of the message sender
                       content:
-                      type: string
+                        type: string
                         description: The message content
                 model:
                   type: string
@@ -112,8 +111,5 @@ paths:
                   response:
                     type: string
                     description: The AI's response
-                  model:
-                    type: string
-                    description: The model used for the response
         '400':
           description: Bad request (e.g., missing message)
