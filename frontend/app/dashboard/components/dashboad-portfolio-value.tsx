@@ -1,7 +1,6 @@
-import { COUCHDB_PASSWORD, COUCHDB_URL, COUCHDB_URL_AUTH, COUCHDB_USER } from "@/app/env";
+import { COUCHDB_URL_AUTH } from "@/app/env";
 import { Card } from "@/shadcn/ui/card";
 import nano from "nano";
-import { cookies } from "next/headers";
 
 type BuyingPower = [number, string][]
 

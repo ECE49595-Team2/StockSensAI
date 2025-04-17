@@ -1,5 +1,5 @@
 import { COUCHDB_URL_AUTH } from "@/app/env";
-import { ChartConfig, ChartContainer } from "@/shadcn/ui/chart";
+import { ChartConfig } from "@/shadcn/ui/chart";
 import nano from "nano";
 import { Card } from "@/shadcn/ui/card";
 import StockChart_Client from "./chart_client";
@@ -31,7 +31,7 @@ async function StockChart({ id }: { id: string }) {
         },
         limit: 1,
     });
-    const portfolioDoc = result.docs[0] as unknown as any;
+    const portfolioDoc = result.docs[0] as unknown as { transactions: { [symbol: string]: Transaction[] } };
     if (!portfolioDoc) {
         return <div>Portfolio not found</div>;
     }

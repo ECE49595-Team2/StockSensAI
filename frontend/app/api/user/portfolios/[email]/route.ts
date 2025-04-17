@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import nano from "nano";
-import { COUCHDB_URL, COUCHDB_URL_AUTH } from "@/app/env";
+import { COUCHDB_URL_AUTH } from "@/app/env";
 
-export async function GET(_: Request, { params }: { params: { email: string } }): Promise<NextResponse> {
+export async function GET(_: Request, { params }: { params: Promise<{ email: string }> }): Promise<NextResponse> {
 
     const queries = await params;
     const email = queries.email;
@@ -14,7 +14,6 @@ export async function GET(_: Request, { params }: { params: { email: string } })
             user: email
         }
     });
-    console.log(result);
 
     if (!result.docs || result.docs.length === 0) {
         return NextResponse.json(

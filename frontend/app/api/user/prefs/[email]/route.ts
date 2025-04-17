@@ -1,15 +1,14 @@
-import { COUCHDB_URL, COUCHDB_URL_AUTH } from "@/app/env";
+import { COUCHDB_URL } from "@/app/env";
 import { NextResponse } from "next/server";
 import nano from "nano";
 
-export async function GET(_: Request, { params }: { params: { email: string } })
+export async function GET(_: Request, { params }: { params: Promise<{ email: string }> })
 {
     const queries = await params;
     const email = queries.email;
 
     const client = nano(COUCHDB_URL);
     const db = client.db.use("prefs");
-    let userDetails;
 
     const result = await db.find({
         selector: {
@@ -17,7 +16,7 @@ export async function GET(_: Request, { params }: { params: { email: string } })
         },
     });
 
-    userDetails = result.docs[0] as unknown as any;
+    const userDetails = result.docs[0] as unknown as { prefs: { name: string, balance: number } };
 
     return NextResponse.json(userDetails.prefs, { status: 200 });
 }

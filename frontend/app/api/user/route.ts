@@ -53,7 +53,7 @@ export async function PUT(req: Request): Promise<NextResponse> {
             password: password,
             roles: ["user"],
             type: "user",
-        } as any);
+        } as { _id: string; name: string; password: string; roles: string[]; type: string });
 
 
         await prefsDb.insert({
@@ -61,7 +61,7 @@ export async function PUT(req: Request): Promise<NextResponse> {
             prefs: {
                 name: name,
             }
-        } as any);
+        } as { _id: string; prefs: { name: string } });
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -97,7 +97,7 @@ export async function DELETE(): Promise<NextResponse> {
         const res = NextResponse.json({ success: true });
         res.headers.set("Set-Cookie", "AuthSession=; Max-Age=0; Path=/; HttpOnly");
         return res;
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: "Failed to logout" }, { status: 401 });
     }
 }

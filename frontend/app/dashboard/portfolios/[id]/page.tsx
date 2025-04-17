@@ -3,7 +3,7 @@ import PortfolioName  from "./portfolio-name";
 import PortfolioSidebar from "./sidebar/sidebar";
 import SidebarName from "./sidebar/sidebar-name";
 
-async function PortfolioDetails({ params }: { params: { id: string } }) {
+async function PortfolioDetails({ params }: { params: Promise<{ id: string }> }) {
     const queries = await params;
     const id = queries.id;
 

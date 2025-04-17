@@ -35,7 +35,7 @@ function HomeContent() {
         setUser(undefined);
       }
     })
-  }, [unauthorizedParam]);
+  }, [unauthorizedParam, setUser]);
 
   useEffect(() => {
     const handleUnauthorized = () => {

@@ -18,7 +18,6 @@ import Submit from "../submit"
 import { useRouter } from "next/navigation";
 import { toast } from "sonner"
 import { useUser } from "@/hooks/use-user"
-import User from "@/models/user-model"
 
 const SignUpSchema = z.object({
     name: z.string().min(1, { message: "Name must be at least 1 character" }),

@@ -15,7 +15,7 @@ function PortfolioSidebarClient({ stocks }: {
     useEffect(() => { }, [selection]);
     useEffect(() => {
         setSelection(Object.keys(stocks)[0]);
-    }, [stocks]);
+    }, [stocks, setSelection]);
 
     function handleStockClick(symbol: string) {
         return (event: React.MouseEvent<HTMLDivElement>) => {

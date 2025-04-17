@@ -14,7 +14,6 @@ function PortfolioContent({ edit }: PortfolioContentProps) {
     const user = useUser((state) => state.user);
     const [loading, isLoading] = useState<boolean>(true);
     const portfolios = usePortfoliosStore((state) => state.portfolios);
-    const lastUpdated = usePortfoliosStore((state) => state.lastUpdated);
     const setPortfolios = usePortfoliosStore((state) => state.setPortfolios)
 
     useEffect(() => {
@@ -40,7 +39,7 @@ function PortfolioContent({ edit }: PortfolioContentProps) {
                 });
             });
         }
-    }, [user, lastUpdated, setPortfolios]);
+    }, [setPortfolios, isLoading]);
 
     if (loading) {
         return <div>

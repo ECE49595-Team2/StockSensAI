@@ -18,12 +18,11 @@ async function PortfolioSidebar({ children, id }: { children: React.ReactNode, i
         },
         limit: 1,
     });
-    const portfolioDoc = result.docs[0] as unknown as any;
+    const portfolioDoc = result.docs[0] as unknown as { positions: { [symbol: string]: StockData } };
     if (!portfolioDoc) {
         redirect("/dashboard/portfolios?error=true");
     }
-    console.log("portfolioDoc", result);
-    let stocks: Stocks = portfolioDoc.positions as unknown as Stocks;
+    const stocks: Stocks = portfolioDoc.positions as unknown as Stocks;
 
     return (
         <div className="flex flex-row max-h-screen h-full gap-4 ">

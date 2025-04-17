@@ -1,16 +1,20 @@
 import { COUCHDB_URL } from "@/app/env";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import nano from "nano";
 
-export async function GET(_: NextRequest, context: { params: { id: string } }) {
-  const { id } = context.params;
+export async function GET(
+  _: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const queries = await params;
+  const id = queries.id;
 
   const client = nano(COUCHDB_URL);
   const db = client.db.use("portfolio");
   let response;
   try {
     response = await db.get(id);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Portfolio not found" },
       { status: 404 }
@@ -24,7 +28,5 @@ export async function GET(_: NextRequest, context: { params: { id: string } }) {
     );
   }
 
-  return NextResponse.json(response,
-    { status: 200 }
-  )
+  return NextResponse.json(response, { status: 200 });
 }

@@ -26,7 +26,6 @@ export async function BalanceWidget() {
         throw new Error("Failed to fetch session.");
     }
     const session = await response.json();
-    console.log("session", session);
     const userId = session?.userCtx?.name;
     if (!userId) {
         redirect("/?unauthorized=true");
@@ -38,7 +37,6 @@ export async function BalanceWidget() {
         },
     });
 
-    console.log(userId);
     const responseJson: { _id: string; _rev: string; prefs: { balance: number; } } = results.docs[0] as unknown as { _id: string; _rev: string; prefs: { balance: number; } };
 
     if (!responseJson) {

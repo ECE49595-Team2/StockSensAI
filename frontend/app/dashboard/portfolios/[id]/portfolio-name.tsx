@@ -11,12 +11,11 @@ async function PortfolioName({ id }: { id: string }) {
         },
         limit: 1,
     });
-    const portfolioDoc = result.docs[0] as unknown as any;
+    const portfolioDoc = result.docs[0] as unknown as { name: string };
     if (!portfolioDoc) {
         return <h1 className="font-bold text-4xl font-anton text-background">Portfolio</h1>;
     }
     const portfolio = portfolioDoc as unknown as { name: string };
-    console.log("portfolioDoc", result);
 
     if (!portfolio || !portfolio.name) {
         return <Skeleton className="h-10 w-1/2" />;
