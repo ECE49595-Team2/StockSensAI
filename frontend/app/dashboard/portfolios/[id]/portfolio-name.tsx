@@ -1,25 +1,32 @@
-"use client";
-import { usePortfoliosStore } from "@/hooks/use-portfolios";
-import Portfolio from "@/models/portfolio-model";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { COUCHDB_URL_AUTH } from "@/app/env";
+import { Skeleton } from "@/shadcn/ui/skeleton";
+import nano from "nano";
 
-function PortfolioName() {
-    const params = useParams();
-    const id = params.id as string;
-    const getPortfolio = usePortfoliosStore((state) => state.getPortfolio);
-    const [portfolio, setPortfolio] = useState<Portfolio | undefined>(undefined);
+async function PortfolioName({ id }: { id: string }) {
+    const client = nano(COUCHDB_URL_AUTH);
+    const db = client.db.use("portfolio");
+    const result = await db.find({
+        selector: {
+            _id: id,
+        },
+        limit: 1,
+    });
+    const portfolioDoc = result.docs[0] as unknown as any;
+    if (!portfolioDoc) {
+        return <h1 className="font-bold text-4xl font-anton text-background">Portfolio</h1>;
+    }
+    const portfolio = portfolioDoc as unknown as { name: string };
+    console.log("portfolioDoc", result);
 
-    useEffect(() => {
-        console.log(getPortfolio(id));
-        setPortfolio(getPortfolio(id));
-    }, [id, getPortfolio]);
+    if (!portfolio || !portfolio.name) {
+        return <Skeleton className="h-10 w-1/2" />;
+    }
 
     return (
         <div className="w-full"> 
-            {portfolio ? <h1 className="font-bold text-4xl font-anton text-background">{portfolio.name}</h1> : <h1 className="font-bold text-4xl font-anton text-background">Portfolio</h1>}
+            <h1 className="font-bold text-4xl font-anton text-background">{portfolio.name}</h1>
         </div>
-    )
+    );
 }
 
 export default PortfolioName;

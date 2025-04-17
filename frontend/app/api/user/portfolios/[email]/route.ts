@@ -1,26 +1,28 @@
-import { COUCHDB_PASSWORD, COUCHDB_URL, COUCHDB_USER } from "@/app/env";
 import { NextResponse } from "next/server";
+import nano from "nano";
+import { COUCHDB_URL, COUCHDB_URL_AUTH } from "@/app/env";
 
-export async function GET(_: Request, { params }: { params: { email: string } }) {
+export async function GET(_: Request, { params }: { params: { email: string } }): Promise<NextResponse> {
+
     const queries = await params;
     const email = queries.email;
+    const client = nano(COUCHDB_URL_AUTH);
+    const db = client.db.use("portfolio");
 
-    const stringifiedEmail = JSON.stringify(email);
-    const response = await fetch(`${COUCHDB_URL}/portfolio/_design/queries/_view/allPortfolios?key=${encodeURIComponent(stringifiedEmail)}`, {
-        method: "GET",
-        headers: {
-            Authorization: `Basic ${btoa(`${COUCHDB_USER}:${COUCHDB_PASSWORD}`)}
-            `,
+    const result = await db.find({
+        selector: {
+            user: email
         }
     });
-    console.log("response", response);
+    console.log(result);
 
-    if (!response.ok) {
-        return NextResponse.error();
+    if (!result.docs || result.docs.length === 0) {
+        return NextResponse.json(
+            { error: "No portfolios found" },
+            { status: 404 }
+        );
     }
-    
-    const data = await response.json();
 
-    const portfolios = data.rows[0].value;
-    return NextResponse.json(portfolios);
+    return NextResponse.json(result.docs, { status: 200 });
+
 }

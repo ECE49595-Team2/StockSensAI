@@ -1,4 +1,6 @@
+"use client";
 import { useUser } from "@/hooks/use-user";
+import User from "@/models/user-model";
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shadcn/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shadcn/ui/sidebar";
 import { Skeleton } from "@/shadcn/ui/skeleton";
@@ -10,13 +12,51 @@ import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
 
 function UserDropdown() {
-    const { user, checkUserSession } = useUser(useShallow((state) => {
+    const { user, setUser } = useUser(useShallow((state) => {
         return {
             user: state.user,
-            checkUserSession: state.checkUserSession
+            setUser: state.setUser
         }
     }));
     const router = useRouter();
+    
+    // useEffect(() => {
+    //     fetch("/api/user/verify", {
+    //         method: "GET",
+    //         credentials: "include",
+    //         cache: "no-store",
+    //     }).then(async (response) => {
+    //         const data = await response.json();
+    //         if (data.success) {
+    //             // const user = data.user;
+    //             // setUser(new User(user?.email));
+    //         }
+    //     });
+
+       
+    // }, [setUser]);
+
+
+    useEffect(() => {
+        async function fetchUserData(email?: string) {
+            if (!email) {
+                return null;
+            }
+            const response = await fetch(`/api/user/prefs/${email}`, {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+            });
+            const data = await response.json();
+        
+            if (response.ok) {
+                setUser(new User(user!.email, data.name))
+            } else {
+                throw new Error("Failed to fetch user data");
+            }
+        }
+        fetchUserData(user?.email);
+    }, [user?.email, user?.name, setUser]);
 
     const logout = async () => {
         const response = await fetch("/api/user", {
@@ -36,10 +76,6 @@ function UserDropdown() {
             })
         }
     }
-
-    useEffect(() => {
-        checkUserSession();
-    }, [checkUserSession]);
 
     return (
         <SidebarMenu className="w-full">

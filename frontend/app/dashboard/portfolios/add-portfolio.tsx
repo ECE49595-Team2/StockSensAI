@@ -2,6 +2,7 @@
 import { Button } from "@/shadcn/ui/button";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/shadcn/ui/drawer";
 import AddPortfolioForm from "./add-portfolio-form";
+import { Plus } from "lucide-react";
 
 function AddPortfolioDrawer({ edit }: { edit: boolean }) {
     return (
@@ -11,7 +12,7 @@ function AddPortfolioDrawer({ edit }: { edit: boolean }) {
                 variant="default" 
                 className="text-white hover:bg-gray-200 hover:text-black cursor-pointer"
                 disabled={edit}
-                >Add Portfolio</Button>
+                ><Plus/> Add Portfolio</Button>
             </DrawerTrigger>
             <DrawerContent className="h-full">
                 <DrawerHeader className="flex flex-col items-center">

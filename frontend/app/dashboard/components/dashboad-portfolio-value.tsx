@@ -1,43 +1,60 @@
-import { COUCHDB_PASSWORD, COUCHDB_URL, COUCHDB_USER } from "@/app/env";
+import { COUCHDB_PASSWORD, COUCHDB_URL, COUCHDB_URL_AUTH, COUCHDB_USER } from "@/app/env";
 import { Card } from "@/shadcn/ui/card";
+import nano from "nano";
 import { cookies } from "next/headers";
 
-async function getPortfolio({ userId }: { userId: string }) {
-    return fetch(`${COUCHDB_URL}/portfolio/${userId}`, {
-        method: "GET",
-        cache: "no-store",
-        headers: {
-            Authorization: `Basic ${btoa(`${COUCHDB_USER}:${COUCHDB_PASSWORD}`)}`,
-        }
-    });
-}
+type BuyingPower = [number, string][]
 
-async function getUserId() {
-    const cookieStore = cookies();
-    const cookie = (await cookieStore).get("AuthSession")?.value;
-    const response = await fetch("http://localhost:3000/api/user/verify",
-        {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-            headers: {
-                Cookie: `AuthSession=${cookie}`,
-            },
-        }
-    );
-    const data = await response.json();
-    return data.session?.userCtx.name;
-}
+type PortfolioDoc = {
+    buying_power: BuyingPower;
+};
 
 export async function PortfolioValueWidget() {
-    const userId = await getUserId();
-    const response = await getPortfolio({ userId: userId });
-    const responseJson = await response.json();
-    return (
-        <Card className="p-4 block overflow-hidden col-span-2">
-            <h1 className="text-md font-bold text-gray-500">Portfolio</h1>
-            <p className="text-4xl font-bold slide-up">${responseJson.portfolio}</p>
-        </Card>
-    );
+    try {
+        const client = nano(COUCHDB_URL_AUTH);
+        const portfolioDb = client.db.use("portfolio");
 
+        const session = await client.relax({
+            db: "_session",
+            method: "GET",
+        });
+
+        const userId = session?.userCtx.name;
+        if (!userId) {
+            throw new Error("User not authenticated.");
+        }
+
+        const results = await portfolioDb.find({
+            selector: {
+                user: userId,
+            },
+        });
+
+        results.docs.forEach((doc) => {
+            const portfolioDoc = doc as unknown as PortfolioDoc;
+            const totalValue = portfolioDoc.buying_power[0][0] || 0;
+
+
+            return (
+                <Card className="p-4 block overflow-hidden col-span-2">
+                    <h1 className="text-md font-bold text-gray-500">Portfolio</h1>
+                    <p
+                        className={`text-4xl font-bold slide-up ${totalValue < 0 ? "text-red-500" : "text-green-500"
+                            }`}
+                    >
+                        ${totalValue.toFixed(2)}
+                    </p>
+                </Card>
+            );
+
+        });
+    } catch (error) {
+        console.error("Error fetching portfolio value:", error);
+        return (
+            <Card className="p-4 block overflow-hidden col-span-2">
+                <h1 className="text-md font-bold text-gray-500">Portfolio</h1>
+                <p className="text-red-500">Error loading portfolio value</p>
+            </Card>
+        );
+    }
 }

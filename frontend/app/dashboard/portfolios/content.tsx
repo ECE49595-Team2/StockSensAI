@@ -1,9 +1,10 @@
 "use client";
 import { useUser } from "@/hooks/use-user";
 import Portfolio from "@/models/portfolio-model";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePortfoliosStore } from "@/hooks/use-portfolios";
 import PortfoliosCard from "./card";
+import { Paperclip } from "lucide-react";
 
 interface PortfolioContentProps {
     edit: boolean;
@@ -11,6 +12,7 @@ interface PortfolioContentProps {
 
 function PortfolioContent({ edit }: PortfolioContentProps) {
     const user = useUser((state) => state.user);
+    const [loading, isLoading] = useState<boolean>(true);
     const portfolios = usePortfoliosStore((state) => state.portfolios);
     const lastUpdated = usePortfoliosStore((state) => state.lastUpdated);
     const setPortfolios = usePortfoliosStore((state) => state.setPortfolios)
@@ -22,39 +24,45 @@ function PortfolioContent({ edit }: PortfolioContentProps) {
                 credentials: "include",
                 cache: "no-store",
             }).then((response) => {
-            response.json().then((result: object) => {
-                    const entries: [string, Portfolio][] = Object.entries(result).map(([key, portfolio]) => {
-                        const p = portfolio as Portfolio;
-                        p.id = key;
-                        return [key, p];
-                    });
-        
-                    const portfolioMap = new Map<string, Portfolio>(entries);
-                    setTimeout(() => {
-                        setPortfolios(portfolioMap);
-                    }, 4000);
-                   
+                response.json().then((result: Portfolio[]) => {
+                    if (response.ok) {
+                        if (Object.keys(result).length === 0) {
+                            setPortfolios(new Map<string, Portfolio>());
+                            return;
+                        }
+
+                        result.forEach((portfolio: Portfolio) => {
+                            portfolios.set(portfolio._id, portfolio);
+                        });
+                       
+                    }
+                    isLoading(false);
                 });
             });
         }
-        console.log(lastUpdated);
     }, [user, lastUpdated, setPortfolios]);
 
-    if (!portfolios || portfolios.size === 0) {
+    if (loading) {
         return <div>
             <div className="flex justify-center items-center h-64">
                 <div className="w-16 h-16 border-4 border-t-4 border-t-orange-500 border-gray-300 rounded-full animate-spin"></div>
             </div>
         </div>;
+    } else if (portfolios.size === 0) {
+        return <div className="flex flex-2 flex-col justify-center items-center gap-4">
+            <Paperclip size={'3rem'}/>
+            <h1>Create your first portfolio</h1>
+        </div>
+
     }
 
     return (
         <div className="grid grid-cols-3 gap-4">
             {Array.from(portfolios.values()).map((portfolio) => (
-                <PortfoliosCard key={portfolio.id} title={portfolio.name} description={portfolio.description} endpoint={portfolio.id} edit={edit} />
+                <PortfoliosCard key={portfolio._id} title={portfolio.name} description={portfolio.description} endpoint={portfolio._id} edit={edit} />
             ))}
         </div>
-       
+
     );
 }
 

@@ -18,7 +18,7 @@ export const usePortfoliosStore = create<PortfoliosStoreType>()((set, get) => ({
     setPortfolios: (portfolios) => set({ portfolios }),
     addPortfolio: (portfolio) => set((state) => {
         const newPortfolios = new Map(state.portfolios);
-        newPortfolios.set(portfolio.id, portfolio);
+        newPortfolios.set(portfolio._id, portfolio);
         return { portfolios: newPortfolios };
     }),
     removePortfolio: (portfolioId) => set((state) => {

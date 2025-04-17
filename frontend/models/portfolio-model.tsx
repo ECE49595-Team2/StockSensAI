@@ -2,7 +2,7 @@ import { useUser } from "@/hooks/use-user";
 import crypto from "crypto";
 
 class Portfolio {
-    public id: string;
+    public _id: string;
     public name: string;
     public description: string;
     public balance: number;
@@ -10,13 +10,13 @@ class Portfolio {
     public performance: number;
     public stocks: Map<string, Stock>;
 
-    constructor(name: string, balance: number, stocks: Map<string, Stock>) {
+    constructor(name: string, balance: number, stocks: Map<string, Stock>, id?: string) {
         this.balance = balance;
         this.stocks = stocks;
         this.totalValue = this.calculateTotalValue();
         this.performance = this.calculatePerformance();
         this.name = name;
-        this.id = this.generateId();
+        this._id = id ? id : this.generateId();
         this.description = "";
     }
 
