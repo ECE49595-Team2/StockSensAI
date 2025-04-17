@@ -16,7 +16,7 @@ function PortfolioContent({ edit }: PortfolioContentProps) {
     const portfolios = usePortfoliosStore((state) => state.portfolios);
     const setPortfolios = usePortfoliosStore((state) => state.setPortfolios)
 
-    useEffect(() => {
+       useEffect(() => {
         if (user) {
             fetch(`/api/user/portfolios/${user.email}`, {
                 method: "GET",
@@ -26,20 +26,23 @@ function PortfolioContent({ edit }: PortfolioContentProps) {
                 response.json().then((result: Portfolio[]) => {
                     if (response.ok) {
                         if (Object.keys(result).length === 0) {
-                            setPortfolios(new Map<string, Portfolio>());
+                            setPortfolios(new Map<string, Portfolio>()); // Set an empty Map
                             return;
                         }
-
+    
+                        // Create a new Map instance to avoid direct mutation
+                        const newPortfolios = new Map<string, Portfolio>();
                         result.forEach((portfolio: Portfolio) => {
-                            portfolios.set(portfolio._id, portfolio);
+                            newPortfolios.set(portfolio._id, portfolio);
                         });
-                       
+    
+                        setPortfolios(newPortfolios); // Update state with the new Map
                     }
                     isLoading(false);
                 });
             });
         }
-    }, [setPortfolios, isLoading]);
+    }, [setPortfolios, isLoading, user?.email]);
 
     if (loading) {
         return <div>

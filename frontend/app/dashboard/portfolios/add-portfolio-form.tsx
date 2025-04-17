@@ -5,6 +5,7 @@ import { Button } from "@/shadcn/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/shadcn/ui/form";
 import { Input } from "@/shadcn/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createHash } from "crypto";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -31,9 +32,12 @@ function AddPortfolioForm() {
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        const randomId = Math.random().toString(36).substring(2, 15);
+        const id = createHash("sha256")
+            .update(values.name + user?.email)
+            .digest("hex")
+            .slice(0, 8);
 
-        fetch(`/api/user/portfolios/${user?.email}/${randomId}`, {
+        fetch(`/api/user/portfolios/${user?.email}/${id}`, {
             method: "PUT",
             body: JSON.stringify(values),
             headers: {

@@ -60,6 +60,7 @@ export async function PUT(req: Request): Promise<NextResponse> {
             _id: email,
             prefs: {
                 name: name,
+                balance: 500
             }
         } as { _id: string; prefs: { name: string } });
 

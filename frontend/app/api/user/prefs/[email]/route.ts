@@ -1,4 +1,4 @@
-import { COUCHDB_URL } from "@/app/env";
+import { COUCHDB_URL_AUTH } from "@/app/env";
 import { NextResponse } from "next/server";
 import nano from "nano";
 
@@ -7,7 +7,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ email: str
     const queries = await params;
     const email = queries.email;
 
-    const client = nano(COUCHDB_URL);
+    const client = nano(COUCHDB_URL_AUTH);
     const db = client.db.use("prefs");
 
     const result = await db.find({

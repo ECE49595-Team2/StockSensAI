@@ -80,7 +80,6 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                     email: data.email,
                     password: data.password,
                     name: data.name,
-                    registered: false,
                 }),
                 headers: {
                     "Content-Type": "application/json",
@@ -92,7 +91,7 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                         description: "Signing up...",
                         position: "top-center",
                     })
-                    fetch("/api/user/verify", {
+                    fetch("/api/user", {
                         method: "POST",
                         body: JSON.stringify({
                             email: data.email,
@@ -101,8 +100,10 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                         headers: {
                             "Content-Type": "application/json",
                         },
-                    }).then((response) => {
+                    }).then(async (response) => {
                         if (response.ok) {
+                            const newUser = await response.json();
+                            setUser({...newUser, email: data.email });
                             setTimeout(() => { router.push("/dashboard?newuser=true") }, 0);
                         } else {
                             toast.error("Failure: Failed to login. Try again.", {
@@ -146,7 +147,7 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                     });
                     const newUser = await response.json();
                     setUser({...newUser, email: data.email });
-                    setTimeout(() => { router.push("/dashboard") }, 2000);
+                    setTimeout(() => { router.push("/dashboard") }, 0);
                     
                 } else {
                     toast.error("Failure: Failed to login. Try again.", {

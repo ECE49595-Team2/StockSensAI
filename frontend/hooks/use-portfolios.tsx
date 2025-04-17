@@ -15,32 +15,29 @@ interface PortfoliosStoreType {
 export const usePortfoliosStore = create<PortfoliosStoreType>()((set, get) => ({
     portfolios: new Map(),
     lastUpdated: Date.now(),
-    setPortfolios: (portfolios) => set({ portfolios }),
+    setPortfolios: (portfolios) => set(() => ({ portfolios })),
     addPortfolio: (portfolio) => set((state) => {
         const newPortfolios = new Map(state.portfolios);
         newPortfolios.set(portfolio._id, portfolio);
-        return { portfolios: newPortfolios };
+        return { portfolios: newPortfolios, lastUpdated: Date.now() };
     }),
     removePortfolio: (portfolioId) => set((state) => {
         const newPortfolios = new Map(state.portfolios);
         newPortfolios.delete(portfolioId);
-        return { portfolios: newPortfolios };
+        return { portfolios: newPortfolios, lastUpdated: Date.now() };
     }),
     updatePortfolio: (portfolioId, updatedPortfolio) => set((state) => {
         const newPortfolios = new Map(state.portfolios);
         if (newPortfolios.has(portfolioId)) {
             newPortfolios.set(portfolioId, updatedPortfolio);
         }
-        return { portfolios: newPortfolios };
+        return { portfolios: newPortfolios, lastUpdated: Date.now() };
     }),
     getPortfolio: (portfolioId) => {
         const portfolios = get().portfolios;
         return portfolios.get(portfolioId);
     },
     setLastUpdated: () => {
-        setTimeout(() => {
-            set({ lastUpdated: Date.now() })
-        }, 1000);
+        set(() => ({ lastUpdated: Date.now() }));
     }
-}
-));
+}));

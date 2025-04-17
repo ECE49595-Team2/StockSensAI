@@ -20,21 +20,21 @@ function UserDropdown() {
     }));
     const router = useRouter();
     
-    // useEffect(() => {
-    //     fetch("/api/user/verify", {
-    //         method: "GET",
-    //         credentials: "include",
-    //         cache: "no-store",
-    //     }).then(async (response) => {
-    //         const data = await response.json();
-    //         if (data.success) {
-    //             // const user = data.user;
-    //             // setUser(new User(user?.email));
-    //         }
-    //     });
+    useEffect(() => {
+        fetch("/api/user/verify", {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+        }).then(async (response) => {
+            const data = await response.json();
+            if (data.success) {
+            const user = data.user;
+                setUser(new User(user?.email));
+            }
+        });
 
        
-    // }, [setUser]);
+    }, [setUser]);
 
 
     useEffect(() => {
@@ -56,7 +56,7 @@ function UserDropdown() {
             }
         }
         fetchUserData(user?.email);
-    }, [user?.email, user?.name, setUser, user]);
+    }, [user?.email, user?.name, setUser]);
 
     const logout = async () => {
         const response = await fetch("/api/user", {
