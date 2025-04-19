@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 
 export async function BalanceWidget() {
     const client = nano(COUCHDB_URL_AUTH);
-    const db = client.db.use("prefs");
+    const db = client.db.use("portfolio");
     const cookie = (await cookies()).get("AuthSession")?.value;
     if (!cookie) {
         redirect("/?unauthorized=true");

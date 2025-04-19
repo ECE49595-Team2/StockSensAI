@@ -3,6 +3,7 @@ import crypto from "crypto";
 
 class Portfolio {
     public _id: string;
+    public date_created: string;
     public name: string;
     public description: string;
     public balance: number;
@@ -18,6 +19,7 @@ class Portfolio {
         this.name = name;
         this._id = id ? id : this.generateId();
         this.description = "";
+        this.date_created = "";
     }
 
     private generateId(): string {

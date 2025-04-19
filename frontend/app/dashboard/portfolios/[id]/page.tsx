@@ -1,4 +1,4 @@
-import StockChart from "./charts/chart";
+import NewsAnalysis from "./news-analysis";
 import PortfolioName  from "./portfolio-name";
 import PortfolioSidebar from "./sidebar/sidebar";
 import SidebarName from "./sidebar/sidebar-name";
@@ -13,7 +13,7 @@ async function PortfolioDetails({ params }: { params: Promise<{ id: string }> })
             <PortfolioSidebar id={id}>
                 <div className="flex flex-col gap-2 w-full flex-1 overflow-y-auto">
                     <SidebarName />
-                    <StockChart id={id} />
+                    <NewsAnalysis />
                 </div>
             </PortfolioSidebar>
         </div>

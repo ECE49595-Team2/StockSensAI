@@ -13,6 +13,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ email: s
     try {
         await db.insert({
             _id: id,
+            date_created: new Date().toISOString(),
             user: email,
             name: name,
             transactions: [],
@@ -22,6 +23,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ email: s
             strategy_id: "",
         } as {
             _id: string;
+            date_created: string;
             user: string;
             name: string;
             transactions: object[]; 
@@ -36,6 +38,24 @@ export async function PUT(req: Request, { params }: { params: Promise<{ email: s
             { status: 404 }
         );
     }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+}
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ email: string, id: string }> }) {
+    const queries = await params;
+    const { email, id } = queries;
+
+    const client = nano(COUCHDB_URL_AUTH);
+    const db = client.db.use("portfolio");
+    const doc = await db.get(id);
+    if (!doc) {
+        return NextResponse.json(
+            { error: "Portfolio not found" },
+            { status: 404 }
+        );
+    }
+    await db.destroy(id, doc._rev);
 
     return NextResponse.json({ success: true }, { status: 200 });
 }

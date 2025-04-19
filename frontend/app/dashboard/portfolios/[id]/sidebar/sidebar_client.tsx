@@ -3,19 +3,23 @@ import { useStockSelection } from "@/hooks/use-stock-select";
 import { Card } from "@/shadcn/ui/card";
 import { useEffect } from "react";
 import BuySell from "./buy-sell";
+import AddStockButton from "./add-stock-button";
+import { usePortfoliosStore } from "@/hooks/use-portfolios";
 
-function PortfolioSidebarClient({ stocks }: {
+function PortfolioSidebarClient({ stocks, id }: {
     stocks: {
         [symbol: string]: number;
-    };
+    },
+    id: string;
 }) {
     const selection = useStockSelection((state) => state.selection);
     const setSelection = useStockSelection((state) => state.setSelection);
+    const refreshKey = usePortfoliosStore((state) => state.refreshKey);
 
     useEffect(() => { }, [selection]);
     useEffect(() => {
         setSelection(Object.keys(stocks)[0]);
-    }, [stocks, setSelection]);
+    }, [stocks, setSelection, refreshKey]);
 
     function handleStockClick(symbol: string) {
         return (event: React.MouseEvent<HTMLDivElement>) => {
@@ -27,6 +31,7 @@ function PortfolioSidebarClient({ stocks }: {
     return (
         <div className="flex flex-1 flex-col gap-4">
             <div className="flex flex-col bg-background rounded-lg p-4 gap-3">
+                <AddStockButton id={id}/>
                 {Object.entries(stocks).map(([symbol, data]) => (
                     <Card key={symbol} onClick={handleStockClick(symbol)} className={`w-full rounded border p-4 flex flex-row shadow-sm ${selection === symbol ? "bg-primary text-white" : ""}`}>
                         <div className="flex flex-col gap-2">

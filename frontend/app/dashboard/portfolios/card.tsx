@@ -19,7 +19,7 @@ function PortfoliosCard({ title, description, endpoint, edit }: PortfoliosCardPr
     const user = useUser((state) => state.user);
     const portfolios = usePortfoliosStore((state) => state.portfolios);
     const setPortfolios = usePortfoliosStore((state) => state.setPortfolios);
-    const setLastUpdated = usePortfoliosStore((state) => state.setLastUpdated);
+    const triggerRefresh = usePortfoliosStore((state) => state.triggerRefresh);
     const email = user?.email;
 
     useEffect(() => { }, [edit]);
@@ -32,7 +32,7 @@ function PortfoliosCard({ title, description, endpoint, edit }: PortfoliosCardPr
         }).then((response) => {
             if (response.ok) {
                 setPortfolios(new Map([...portfolios].filter(([key]) => key !== endpoint)));
-                setLastUpdated();
+                triggerRefresh();
                 router.refresh();
             }
         });

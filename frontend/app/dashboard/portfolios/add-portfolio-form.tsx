@@ -21,7 +21,7 @@ const formSchema = z.object({
 
 function AddPortfolioForm() {
     const user = useUser((state) => state.user);
-    const setLastUpdated = usePortfoliosStore((state) => state.setLastUpdated);
+    const triggerRefresh = usePortfoliosStore((state) => state.triggerRefresh);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -46,6 +46,7 @@ function AddPortfolioForm() {
         }).then((response) => {
             if (response.ok) {
                 form.reset();
+                triggerRefresh();
                 toast.success("Portfolio created successfully", {
                     richColors: true,
                     position: "top-center",
@@ -58,7 +59,8 @@ function AddPortfolioForm() {
             }
         });
 
-        setLastUpdated();
+        
+       
     }
 
     return (
