@@ -16,7 +16,7 @@ function ChatWindow() {
     }, [messages]);
 
     return (
-        <div className="overflow-scroll min-h-[100px] h-full min-w-[80%] bg-gray-100 p-3 rounded-lg inset-shadow-sm mt-3">
+        <div className="overflow-scroll flex flex-1 flex-col min-w-[80%] bg-gray-100 p-3 rounded-lg inset-shadow-sm mt-3">
             <AnimatePresence>
                 {messages.map((message, index) => (
                     <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>

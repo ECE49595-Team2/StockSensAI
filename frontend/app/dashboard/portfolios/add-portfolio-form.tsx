@@ -99,7 +99,7 @@ function AddPortfolioForm() {
                             </FormItem>
                         )}
                     ></FormField>
-                    <Button type="submit" className="cursor-pointer">Create Portfolio</Button>
+                    <Button type="submit" className="cursor-pointer active:scale-95">Create Portfolio</Button>
                 </form>
             </Form>
         </div>

@@ -5,7 +5,7 @@ import { Button } from "@/shadcn/ui/button";
 import { Card, CardDescription, CardTitle } from "@/shadcn/ui/card";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface PortfoliosCardProps {
     title: string;
@@ -20,6 +20,7 @@ function PortfoliosCard({ title, description, endpoint, edit }: PortfoliosCardPr
     const portfolios = usePortfoliosStore((state) => state.portfolios);
     const setPortfolios = usePortfoliosStore((state) => state.setPortfolios);
     const triggerRefresh = usePortfoliosStore((state) => state.triggerRefresh);
+    const [pressed, setPressed] = useState(false);
     const email = user?.email;
 
     useEffect(() => { }, [edit]);
@@ -38,10 +39,14 @@ function PortfoliosCard({ title, description, endpoint, edit }: PortfoliosCardPr
         });
         
     }
-
+    
     return (
         <Card
-            onClick={() => router.push(`/dashboard/portfolios/${endpoint}`)} className="relative cursor-pointer bg-secondary text-black p-4 "
+            onMouseDown={() => setPressed(true)}
+            onMouseUp={() => setPressed(false)}
+            onMouseLeave={() => setPressed(false)}
+            className={`relative cursor-pointer bg-secondary text-black p-4 ${pressed ? "scale-95 transition-transform duration-150" : "transition-transform duration-150"}`}
+            onClick={() => router.push(`/dashboard/portfolios/${endpoint}`)} 
         >
             {edit &&
                 <Button
