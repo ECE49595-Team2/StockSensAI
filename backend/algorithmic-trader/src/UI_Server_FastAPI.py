@@ -9,19 +9,16 @@ from typing import List, Dict
 from apscheduler.schedulers.background import BackgroundScheduler
 from Simple_Moving_Average import run_strategy
 import uuid
+import yfinance as yf
 
 load_dotenv()
 
-API_KEY = os.environ.get("ALPACA_API_KEY", os.getenv("ALPACA_API_KEY"))
-API_SECRET = os.environ.get("ALPACA_API_SECRET", os.getenv("ALPACA_API_SECRET"))
-api = tradeapi.REST(API_KEY, API_SECRET, base_url="https://paper-api.alpaca.markets")
-
 # for local testing
-# COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
+COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
 # for deployment
-COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
-COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
-COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
+# COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
+# COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
+# COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
 
 DB_NAME = "portfolio"
 server = couchdb.Server(COUCHDB_URL)
@@ -56,13 +53,30 @@ def get_stock_prices(symbols):
     
     for symbol in symbols:
         try:
-            trade = api.get_latest_trade(symbol)
-            prices[symbol] = trade.price
+            stock = yf.Ticker(symbol)
+            data = stock.history(period='1d')
+            current_price = data['Close'].iloc[-1]
+            prices[symbol] = current_price
         except Exception as e:
             print(f"Error fetching price for {symbol}: {e}")
             prices[symbol] = None  # Handle missing prices gracefully
 
     return prices
+
+
+def get_num_days(period):
+    days = 0
+    if(period == "7d"):
+        days = 7
+    elif(period == "1mo"):
+        days = 30
+    elif(period == "3mo"):
+        days = 90
+    elif(period == "1y"):
+        days = 365
+    elif(period == "5y"):
+        days = 365 * 5
+    return days
 
 
 app = FastAPI()
@@ -134,12 +148,16 @@ def get_stock_position(portfolio_id: str, symbol: str):
 
 
 @app.post("/update-account-history")
-async def update_account_history(portfolio_id: str):
+async def update_account_history(portfolio_id: str, period = "7d"):
     """Updates the user's account value history based on their owned stocks."""
     try:
         user_doc = db.get(portfolio_id)
         if not user_doc:
             raise HTTPException(status_code=404, detail="Portfolio not found")
+        
+        VALID_PERIODS = {"7d", "1mo", "3mo", "1y", "5y"}
+        if(period not in VALID_PERIODS):
+            raise HTTPException(status_code=400, detail="Period is invalid")
 
         transactions = user_doc.get("transactions", {})
         buying_power = user_doc.get("buying_power", [])
@@ -147,29 +165,25 @@ async def update_account_history(portfolio_id: str):
         historical_data = []
         total_value = 0
 
-        start_date = (datetime.now() - timedelta(days=6)).strftime("%Y-%m-%d")  # 7 days ago
-        end_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")  # Yesterday
-
         if transactions:
-            stock_list = list(transactions.keys())
-            bars = api.get_bars(stock_list, tradeapi.rest.TimeFrame.Day, start=start_date, end=end_date).df
-
-            if len(stock_list) == 1:
-                # Only one stock, reshape manually
-                stock = stock_list[0]
-                closing_prices = bars["close"].to_frame().rename(columns={"close": stock})
-                closing_prices.index = closing_prices.index.strftime("%Y-%m-%d")
-            else:
-                # Multiple stocks
-                closing_prices = bars.reset_index().pivot(index="timestamp", columns="symbol", values="close")
-                closing_prices.index = closing_prices.index.strftime("%Y-%m-%d")
+            closing_prices = {}
+            # Loop through the stock symbols
+            for symbol in transactions.keys():
+                # Fetch data for the past 7 days for each symbol
+                stock = yf.Ticker(symbol)
+                data = stock.history(period=period)
+                # Store the data in the dictionary with the symbol as the key
+                closing_prices[symbol] = data
         else:
             closing_prices = {}
 
-        for x in range(6):
-            weekend = False
+        days = get_num_days(period)
+
+        for x in range(days):
+            no_data = False
+            invalid = False
             total_value = 0
-            day = datetime.now() - timedelta(days=6-x)
+            day = datetime.combine((datetime.now() - timedelta(days=days - 1 - x)).date(), datetime.max.time())
             formatted_day = day.strftime("%Y-%m-%d")
 
             if(formatted_day in existing_account_history):
@@ -179,61 +193,36 @@ async def update_account_history(portfolio_id: str):
 
             for stock,value in transactions.items():
                 for transaction in value:
-                    price = closing_prices.loc[formatted_day, stock] if formatted_day in closing_prices.index else None
+                    price = closing_prices[stock].loc[formatted_day, "Close"] if formatted_day in closing_prices[stock].index else None
                     if(price is not None):
-                        if(datetime.fromisoformat(transaction["timestamp"]) < day and transaction["type"] == "Buy"):
-                            total_value += closing_prices.loc[formatted_day, stock] * transaction["quantity"]
-                        elif(datetime.fromisoformat(transaction["timestamp"]) < day and transaction["type"] == "Sell"):
-                            total_value -= closing_prices.loc[formatted_day, stock] * transaction["quantity"]
+                        if(datetime.fromisoformat(transaction["timestamp"]) <= day and transaction["type"] == "Buy"):
+                            total_value += closing_prices[stock].loc[formatted_day, "Close"] * transaction["quantity"]
+                        elif(datetime.fromisoformat(transaction["timestamp"]) <= day and transaction["type"] == "Sell"):
+                            total_value -= closing_prices[stock].loc[formatted_day, "Close"] * transaction["quantity"]
                     else:
+                        no_data = True
+                        break
+
+                if(no_data):
+                    if(x >= 1 and len(historical_data) == x):
                         total_value = historical_data[x-1]["value"] #default to previous values
-                        weekend = True
+                    else:
+                        invalid = True
+                    break
             
             latest_buying_power = -1000000
             for moneys in buying_power:
                 if(datetime.fromisoformat(moneys[1]) < day):
                     latest_buying_power = moneys[0]
             if(latest_buying_power == -1000000):
-                if(weekend == False):
+                if(no_data == False):
                     total_value += 100000 #no buying power set, before account was created
             else:
-                if(weekend == False):
+                if(no_data == False):
                     total_value += latest_buying_power
-            
-            historical_data_point = {"timestamp": formatted_day, "value": total_value}
-            historical_data.append(historical_data_point)
-
-        weekend = False
-        #last data point is current value
-        total_value = 0
-        day = datetime.now()
-        formatted_day = day.strftime("%Y-%m-%d")
-        current_values = get_stock_prices(transactions.keys())
-        for stock,value in transactions.items():
-                for transaction in value:
-                    price = current_values[stock] if stock in current_values else None
-                    if(price is not None):
-                        if(transaction["type"] == "Buy"):
-                            total_value += current_values[stock] * transaction["quantity"]
-                        elif(transaction["type"] == "Sell"):
-                            total_value -= current_values[stock] * transaction["quantity"]
-                    else:
-                        total_value = historical_data[x-1]["value"]
-                        weekend = True
-
-        latest_buying_power = -1000000
-        for moneys in buying_power:
-            if(datetime.fromisoformat(moneys[1]) < day):
-                latest_buying_power = moneys[0]
-        if(latest_buying_power == -1000000):
-            if(weekend == False):
-                total_value += 100000 #no buying power set, before account was created
-        else:
-            if(weekend == False):
-                total_value += latest_buying_power
-        
-        historical_data_point = {"timestamp": formatted_day, "value": total_value}
-        historical_data.append(historical_data_point)
+            if(invalid == False):
+                historical_data_point = {"timestamp": formatted_day, "value": total_value}
+                historical_data.append(historical_data_point)
 
         user_doc["account_value_history"] = historical_data
         db.save(user_doc)
@@ -314,5 +303,30 @@ async def sell_order(portfolio_id: str, symbol: str, quantity: float):
         db.save(user_doc)
 
         return {"message": "Sold stock", "transaction": new_transaction}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.post("/single_day_performance")
+async def single_day(portfolio_id: str):
+    try:
+        user_doc = db.get(portfolio_id)
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        
+        positions = user_doc.get("positions", {})
+        current_values = get_stock_prices(positions.keys())
+        return_value = []
+        for symbol, value in positions.items():
+            # have to use yahoo finance to get today's opening price
+            stock = yf.Ticker(symbol)
+            hist = stock.history(period='1d')  # Fetch 1 day's worth of data
+            # Get the opening price for today
+            open_price = hist['Open'].iloc[0]
+            gain = (current_values[symbol] - open_price) / open_price
+            new_entry = {"ticker": symbol, "quantity": value, "gain": gain}
+            return_value.append(new_entry)
+        return {"Performance": return_value}
+            
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
