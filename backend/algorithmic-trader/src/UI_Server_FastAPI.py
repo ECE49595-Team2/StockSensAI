@@ -255,7 +255,13 @@ async def buy_order(portfolio_id: str, symbol: str, quantity: float):
         positions[symbol] = positions.get(symbol, 0) + quantity
         user_doc["positions"] = positions
 
-        new_buying_power = user_doc.get("buying_power", [[100000, "dummy"]])[-1][0] - (stock_prices.get(symbol, 0) * quantity)
+        buying_power = user_doc.get("buying_power")
+        temp_buying_power = 0
+        if not buying_power:
+            temp_buying_power = 100000
+        else:
+            temp_buying_power = buying_power[-1][0]
+        new_buying_power = temp_buying_power - (stock_prices.get(symbol, 0) * quantity)
         new_buying_list = user_doc.get("buying_power", {})
         if(new_buying_power < 0):
             raise HTTPException(status_code=400, detail="Not enough buying power to buy quantity of stock")
@@ -296,9 +302,20 @@ async def sell_order(portfolio_id: str, symbol: str, quantity: float):
         user_doc["transactions"] = transactions
 
         positions[symbol] -= quantity
+        if(positions[symbol] == 0):
+            position = positions.pop(symbol, None)
+            if(position):
+                position.remove()
         user_doc["positions"] = positions
 
-        new_buying_power = user_doc.get("buying_power", [[100000, "dummy"]])[-1][0] + (stock_prices.get(symbol, 0) * quantity)
+        buying_power = user_doc.get("buying_power")
+        temp_buying_power = 0
+        if not buying_power:
+            temp_buying_power = 100000
+        else:
+            temp_buying_power = buying_power[-1][0]
+
+        new_buying_power = temp_buying_power + (stock_prices.get(symbol, 0) * quantity)
         user_doc["buying_power"].append([new_buying_power, current_time]) 
         db.save(user_doc)
 
@@ -307,7 +324,7 @@ async def sell_order(portfolio_id: str, symbol: str, quantity: float):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@app.post("/single_day_performance")
+@app.get("/single_day_performance")
 async def single_day(portfolio_id: str):
     try:
         user_doc = db.get(portfolio_id)
@@ -323,10 +340,10 @@ async def single_day(portfolio_id: str):
             hist = stock.history(period='1d')  # Fetch 1 day's worth of data
             # Get the opening price for today
             open_price = hist['Open'].iloc[0]
-            gain = (current_values[symbol] - open_price) / open_price
-            new_entry = {"ticker": symbol, "quantity": value, "gain": gain}
+            gain = ((current_values[symbol] - open_price) / open_price) * 100
+            new_entry = {"ticker": symbol, "count": value, "gain": gain}
             return_value.append(new_entry)
-        return {"Performance": return_value}
+        return {"positions": return_value}
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
