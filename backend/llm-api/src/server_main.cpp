@@ -233,6 +233,74 @@ void handle_post_request(HTTPMessage headerData, HTTPResponse* response)
             badRequestResponse(response);
         }
     }
+    else if (headerData.path == "/fullPerspective")
+    {
+        try
+        {
+            // Get the ticker from the request body
+            json requestJson = json::parse(headerData.body);
+            std::string ticker = requestJson["ticker"].get<std::string>();
+
+            requestJson.erase("ticker");
+            
+            // Model choosing and handling
+            std::string model = LLAMA;
+
+            if (requestJson.find("model") != requestJson.end())
+            {
+                model = modelSelection(requestJson["model"].get<std::string>());
+                
+                requestJson.erase("model");
+            }
+
+            AverseLevel adverseLevel = RiskNeutral; 
+
+            if (requestJson.find("adverse_level") != requestJson.end())
+            {
+                std::string adverseLevelStr = requestJson["adverse_level"].get<std::string>();
+
+                if (adverseLevelStr == "adverse")
+                {
+                    adverseLevel = RiskAdverse;
+                }
+                else if (adverseLevelStr == "seeking")
+                {
+                    adverseLevel = RiskSeeking;
+                }
+
+                //std::cout << adverseLevelStr << std::endl;
+
+                requestJson.erase("adverse_level");
+            }
+
+            json newsAnalysis = NULL;
+
+            if (requestJson.find("news_analysis") != requestJson.end())
+            {
+                newsAnalysis = requestJson["news_analysis"];
+
+                requestJson.erase("news_analysis");
+            }
+
+            double timeLim = 0;
+
+            // Check if there is a time limit field in the request body
+            if (requestJson.find("time_limit") != requestJson.end())
+            {
+                timeLim = requestJson["time_limit"].get<double>();
+                requestJson.erase("time_limit");
+            }
+
+            json responseJson = fullPerspective(ticker, adverseLevel, model, requestJson, newsAnalysis, timeLim);
+
+            genericResponse(response, 200, JSON, responseJson.dump());
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Error getting full perspective: " << e.what() << std::endl;
+            badRequestResponse(response);
+        }
+    }
     else
     {
         badRequestResponse(response);
