@@ -1,10 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import couchdb
-from datetime import datetime, timedelta
 import os
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
-import alpaca_trade_api as tradeapi
 from typing import List, Dict
 from apscheduler.schedulers.background import BackgroundScheduler
 from Simple_Moving_Average import run_strategy
@@ -14,11 +13,11 @@ import yfinance as yf
 load_dotenv()
 
 # for local testing
-COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
+#COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
 # for deployment
-# COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
-# COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
-# COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
+COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
+COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
+COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
 
 DB_NAME = "portfolio"
 server = couchdb.Server(COUCHDB_URL)
@@ -186,7 +185,7 @@ async def update_account_history(portfolio_id: str, period = "7d"):
             day = datetime.combine((datetime.now() - timedelta(days=days - 1 - x)).date(), datetime.max.time())
             formatted_day = day.strftime("%Y-%m-%d")
 
-            if(formatted_day in existing_account_history):
+            if(formatted_day in existing_account_history and x != days - 1):
                 historical_data_point = {"timestamp": formatted_day, "value": existing_account_history[formatted_day]}
                 historical_data.append(historical_data_point)
                 continue # don't need to recalculate if already in account_value_history
