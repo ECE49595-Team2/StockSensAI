@@ -17,11 +17,11 @@ API_SECRET = os.environ.get("ALPACA_API_SECRET", os.getenv("ALPACA_API_SECRET"))
 api = tradeapi.REST(API_KEY, API_SECRET, base_url="https://paper-api.alpaca.markets")
 
 # for local testing
-# COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
+COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
 # for deployment
-COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
-COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
-COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
+# COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
+# COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
+# COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
 
 DB_NAME = "portfolio"
 server = couchdb.Server(COUCHDB_URL)
@@ -166,10 +166,13 @@ async def update_account_history(portfolio_id: str):
         else:
             closing_prices = {}
 
+
+        invalid = False
         for x in range(6):
             weekend = False
             total_value = 0
-            day = datetime.now() - timedelta(days=6-x)
+            # Set to 11:59:59 PM (end of the day)
+            day = datetime.combine((datetime.now() - timedelta(days=6 - x)).date(), datetime.max.time())
             formatted_day = day.strftime("%Y-%m-%d")
 
             if(formatted_day in existing_account_history):
@@ -177,18 +180,30 @@ async def update_account_history(portfolio_id: str):
                 historical_data.append(historical_data_point)
                 continue # don't need to recalculate if already in account_value_history
 
-            for stock,value in transactions.items():
+            has_price_data = True
+
+            for stock, value in transactions.items():
+                try:
+                    price = closing_prices.loc[formatted_day, stock]
+                except KeyError:
+                    has_price_data = False
+                    break  # Bail out — missing any price = skip this day
+
                 for transaction in value:
-                    price = closing_prices.loc[formatted_day, stock] if formatted_day in closing_prices.index else None
-                    if(price is not None):
-                        if(datetime.fromisoformat(transaction["timestamp"]) < day and transaction["type"] == "Buy"):
-                            total_value += closing_prices.loc[formatted_day, stock] * transaction["quantity"]
-                        elif(datetime.fromisoformat(transaction["timestamp"]) < day and transaction["type"] == "Sell"):
-                            total_value -= closing_prices.loc[formatted_day, stock] * transaction["quantity"]
-                    else:
-                        total_value = historical_data[x-1]["value"] #default to previous values
-                        weekend = True
-            
+                    tx_time = datetime.fromisoformat(transaction["timestamp"])
+                    if tx_time <= day:
+                        if transaction["type"] == "Buy":
+                            total_value += price * transaction["quantity"]
+                        elif transaction["type"] == "Sell":
+                            total_value -= price * transaction["quantity"]
+
+            if not has_price_data:
+                weekend = True
+                if x >= 1:
+                    total_value = historical_data[x - 1]["value"]
+                else:
+                    invalid = True
+
             latest_buying_power = -1000000
             for moneys in buying_power:
                 if(datetime.fromisoformat(moneys[1]) < day):
@@ -199,9 +214,9 @@ async def update_account_history(portfolio_id: str):
             else:
                 if(weekend == False):
                     total_value += latest_buying_power
-            
-            historical_data_point = {"timestamp": formatted_day, "value": total_value}
-            historical_data.append(historical_data_point)
+            if(invalid == False):
+                historical_data_point = {"timestamp": formatted_day, "value": total_value}
+                historical_data.append(historical_data_point)
 
         weekend = False
         #last data point is current value
