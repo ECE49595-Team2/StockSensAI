@@ -30,14 +30,49 @@ class SMACross(Strategy):
     sma2 = 50
 
     def init(self):
-        self.sma1_series = self.I(lambda x: pd.Series(x).rolling(self.sma1).mean(), self.data.Close)
-        self.sma2_series = self.I(lambda x: pd.Series(x).rolling(self.sma2).mean(), self.data.Close)
+        self.df = get_historical_data("AAPL")
 
     def next(self):
-        if crossover(self.sma1_series, self.sma2_series):
+        self.run_strategy()
+
+    def get_historical_data(self, symbol, timeframe="1Day", days=100):
+        """Fetch historical stock data from Alpaca API."""
+        end_date = datetime.datetime.now().strftime('%Y-%m-%d')  # Convert to 'YYYY-MM-DD'
+        start_date = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime('%Y-%m-%d')
+
+        barset = api.get_bars(symbol, timeframe, start=start_date, end=end_date, feed="iex").df
+        if barset.empty:
+            print("No data returned. Check your API access or symbol.")
+        return barset
+
+
+    def calculate_moving_averages(self, df, short_window=20, long_window=50):
+        df["SMA_Short"] = df["close"].rolling(window=short_window).mean()
+        df["SMA_Long"] = df["close"].rolling(window=long_window).mean()
+        return df
+
+
+    def generate_signals(self, df):
+        df["Signal"] = 0
+        df.loc[df["SMA_Short"] > df["SMA_Long"], "Signal"] = 1  # Buy
+        df.loc[df["SMA_Short"] < df["SMA_Long"], "Signal"] = -1  # Sell
+        return df
+
+
+    def execute_trade(self, signal):
+        print(f"Signal: {signal}, Current position size: {self.position.size}")
+        
+        if signal == 1:
             self.buy()
-        elif crossover(self.sma2_series, self.sma1_series):
+        elif signal == -1:
             self.sell()
+
+
+    def run_strategy(self):
+        self.df = self.calculate_moving_averages(self.df)
+        self.df = self.generate_signals(self.df)
+        latest_signal = self.df["Signal"].iloc[-1]
+        self.execute_trade(latest_signal)
 
 
 def get_historical_data(symbol, timeframe="1Day", days=100):
@@ -156,6 +191,16 @@ if __name__ == "__main__":
     bt = Backtest(df, SMACross, cash=10000, commission=.002)
     result = bt.run()
     print(result)
-    bt.plot()
+    #bt.plot()
     import matplotlib.pyplot as plt
+    equity = result['_equity_curve']['Equity']
+
+    # Plot it
+    plt.figure(figsize=(10, 5))
+    plt.plot(equity.index, equity.values)
+    plt.title('Portfolio Value Over Time')
+    plt.xlabel('Time')
+    plt.ylabel('Equity ($)')
+    plt.grid(True)
+    plt.tight_layout()
     plt.show()
