@@ -6,12 +6,11 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from typing import List, Dict
 from apscheduler.schedulers.background import BackgroundScheduler
-from Simple_Moving_Average import run_SMA
+from Strategies.Simple_Moving_Average import run_SMA, SMACross
 import uuid
 import yfinance as yf
 from backtesting import Backtest
 import warnings
-from Simple_Moving_Average import SMACross
 import pandas as pd
 
 load_dotenv()
@@ -260,7 +259,7 @@ async def update_account_history(portfolio_id: str, period = "7d"):
             
             latest_buying_power = -1000000
             for moneys in buying_power:
-                if(datetime.fromisoformat(moneys[1]) < day):
+                if(datetime.fromisoformat(moneys[1]) <= day):
                     latest_buying_power = moneys[0]
             if(latest_buying_power == -1000000):
                 if(no_data == False):

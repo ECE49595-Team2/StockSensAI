@@ -1,11 +1,8 @@
-import matplotlib.pyplot as plt
-from backtesting import Backtest, Strategy
+from backtesting import Strategy
 import pandas as pd
 import yfinance as yf
 import numpy as np
-import warnings
 import requests
-import matplotlib.pyplot as plt
 
 
 # Helper functions
@@ -92,29 +89,3 @@ class SMACross(Strategy):
             self.buy()
         elif self.sma_short[i] < self.sma_long[i] and self.position.is_long:
             self.sell()
-
-
-
-if __name__ == "__main__":
-    df = get_data("AAPL")
-    df = df.reset_index()
-    # Keep only required columns for Backtest
-    df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
-    df['Date'] = pd.to_datetime(df['Date'])
-    df.set_index('Date', inplace=True)
-    bt = Backtest(df, SMACross, cash=100000, commission=.002)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=UserWarning)
-        result = bt.run()
-    print(result)
-    equity = result['_equity_curve']['Equity']
-
-    # Plot it
-    plt.figure(figsize=(10, 5))
-    plt.plot(equity.index, equity.values)
-    plt.title('Portfolio Value Over Time')
-    plt.xlabel('Time')
-    plt.ylabel('Equity ($)')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
