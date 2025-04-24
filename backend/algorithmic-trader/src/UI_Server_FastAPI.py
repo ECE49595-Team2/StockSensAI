@@ -7,8 +7,13 @@ from dotenv import load_dotenv
 import alpaca_trade_api as tradeapi
 from typing import List, Dict
 from apscheduler.schedulers.background import BackgroundScheduler
-from Simple_Moving_Average import run_strategy
+from Simple_Moving_Average import run_SMA
 import uuid
+import yfinance as yf
+from backtesting import Backtest
+import warnings
+from Simple_Moving_Average import SMACross
+import pandas as pd
 
 load_dotenv()
 
@@ -17,11 +22,11 @@ API_SECRET = os.environ.get("ALPACA_API_SECRET", os.getenv("ALPACA_API_SECRET"))
 api = tradeapi.REST(API_KEY, API_SECRET, base_url="https://paper-api.alpaca.markets")
 
 # for local testing
-# COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
+COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
 # for deployment
-COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
-COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
-COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
+# COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
+# COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
+# COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
 
 DB_NAME = "portfolio"
 server = couchdb.Server(COUCHDB_URL)
@@ -65,6 +70,13 @@ def get_stock_prices(symbols):
     return prices
 
 
+def get_data(symbol):
+    """Fetch historical stock data from yfinance API."""
+    stock = yf.Ticker(symbol)
+    data = stock.history(period="5Y")
+    return data
+
+
 app = FastAPI()
 scheduler = BackgroundScheduler()
 scheduler.start()
@@ -90,7 +102,7 @@ def start_strategy(portfolio_id: str, symbol: str):
         user_doc["strategy_id"] = strategy_id
         db.save(user_doc)
         
-        job = scheduler.add_job(run_strategy, "interval", seconds=60, args=[symbol, portfolio_id], id=strategy_id)
+        job = scheduler.add_job(run_SMA, "interval", seconds=60, args=[portfolio_id, symbol], id=strategy_id)
         jobs[strategy_id] = job
         return {"message": f"Started strategy {strategy_id} for portfolio {portfolio_id}"}
     except Exception as e:
@@ -129,6 +141,44 @@ def get_stock_position(portfolio_id: str, symbol: str):
         if(symbol in positions):
             return {"qty": positions[symbol]}
         return {"qty": 0}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.get("/get_buying_power")
+def buying_power(portfolio_id: str):
+    try:
+        user_doc = db.get(portfolio_id)
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        buying_power = user_doc.get("buying_power")
+        if(not buying_power):
+            return {"buying_power": 100000}
+        else:
+            return {"buying_power": buying_power[-1][0]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.get("/get_strategy_backtester")    
+def strategy_backtester(symbol: str):
+    try:
+        df = get_data(symbol)
+        df = df.reset_index()
+        # Keep only required columns for Backtest
+        df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+        df['Date'] = pd.to_datetime(df['Date'])
+        df.set_index('Date', inplace=True)
+        bt = Backtest(df, SMACross, cash=100000, commission=.002)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            result = bt.run()
+        print(result)
+        equity = result['_equity_curve']['Equity']
+        retval = []
+        for i in range(len(equity.values)):
+            retval.append({"Index": equity.index[i], "Value": equity.values[i]})
+        return {"Data": retval}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

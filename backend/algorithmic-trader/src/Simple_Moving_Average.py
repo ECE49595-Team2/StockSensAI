@@ -1,198 +1,112 @@
-import alpaca_trade_api as tradeapi
-import time
-import datetime
-import os
-from dotenv import load_dotenv
 import matplotlib.pyplot as plt
-from alpaca_trade_api.rest import APIError
-import requests
 from backtesting import Backtest, Strategy
-from backtesting.lib import crossover
 import pandas as pd
-
-load_dotenv()
-
-def read_secret(secret_name):
-        return os.environ.get(secret_name.upper(), os.getenv(secret_name.upper()))
-
-
-API_KEY = read_secret("alpaca_api_key")
-API_SECRET = read_secret("alpaca_api_secret")
-BASE_URL = "https://paper-api.alpaca.markets"  # Use paper trading for testing
-
-# Create Alpaca API client
-api = tradeapi.REST(API_KEY, API_SECRET, BASE_URL, api_version='v2')
+import yfinance as yf
+import numpy as np
+import warnings
+import requests
+import matplotlib.pyplot as plt
 
 
+# Helper functions
+def get_stock_prices(symbols):
+    """Fetch the latest stock prices from yfinance API."""
+    prices = {}
+    
+    for symbol in symbols:
+        try:
+            stock = yf.Ticker(symbol)
+            data = stock.history(period='1d')
+            current_price = data['Close'].iloc[-1]
+            prices[symbol] = current_price
+        except Exception as e:
+            print(f"Error fetching price for {symbol}: {e}")
+            prices[symbol] = None  # Handle missing prices gracefully
+
+    return prices
+
+
+def moving_average(arr, window):
+    result = np.full_like(arr, fill_value=np.nan, dtype=np.float64)
+    for i in range(window - 1, len(arr)):
+        result[i] = np.mean(arr[i - window + 1:i + 1])
+    return result
+
+
+def get_data(symbol):
+    """Fetch historical stock data from yfinance API."""
+    stock = yf.Ticker(symbol)
+    data = stock.history(period="5Y")
+    return data
+
+
+# Main function to run in start_strategy endpoint
+def run_SMA(portfolio_id, symbol):
+    df = get_data(symbol)
+    sma_short = moving_average(df["Close"], 20)
+    sma_long = moving_average(df["Close"], 50)
+    i = len(df) - 1
+    if pd.isna(sma_short[i]) or pd.isna(sma_long[i]):
+        return  # Skip if SMAs are not yet available
+
+    session = requests.Session()
+    url = "http://127.0.0.1:8000/get_positions"
+    params = {"portfolio_id": portfolio_id,"symbol": symbol}
+    response = session.get(url, cookies=session.cookies.get_dict(), params=params)
+    qty = response.json()["qty"]
+
+    url = "http://127.0.0.1:8000/get_buying_power"
+    params = {"portfolio_id": portfolio_id}
+    response = session.get(url, cookies=session.cookies.get_dict(), params=params)
+    buying_power = response.json()["buying_power"]
+
+    current_price = get_stock_prices([symbol])
+
+    if sma_short[i] > sma_long[i] and qty == 0:
+        amount_to_buy = int(buying_power / current_price)
+        url = "http://127.0.0.1:8000/buy"
+        params = {"portfolio_id": portfolio_id, "symbol": symbol, "quantity": amount_to_buy}
+        response = session.post(url, cookies=session.cookies.get_dict(), params=params)
+
+    elif sma_short[i] < sma_long[i] and qty > 0:
+        url = "http://127.0.0.1:8000/sell"
+        params = {"portfolio_id": portfolio_id, "symbol": symbol, "quantity": qty}
+        response = session.post(url, cookies=session.cookies.get_dict(), params=params)
+
+
+# Backtesting Class
 class SMACross(Strategy):
-
     sma1 = 20
     sma2 = 50
 
     def init(self):
-        self.df = get_historical_data("AAPL")
+        self.sma_short = self.I(moving_average, self.data.Close, self.sma1)
+        self.sma_long = self.I(moving_average, self.data.Close, self.sma2)
+
 
     def next(self):
-        self.run_strategy()
-
-    def get_historical_data(self, symbol, timeframe="1Day", days=100):
-        """Fetch historical stock data from Alpaca API."""
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d')  # Convert to 'YYYY-MM-DD'
-        start_date = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime('%Y-%m-%d')
-
-        barset = api.get_bars(symbol, timeframe, start=start_date, end=end_date, feed="iex").df
-        if barset.empty:
-            print("No data returned. Check your API access or symbol.")
-        return barset
-
-
-    def calculate_moving_averages(self, df, short_window=20, long_window=50):
-        df["SMA_Short"] = df["close"].rolling(window=short_window).mean()
-        df["SMA_Long"] = df["close"].rolling(window=long_window).mean()
-        return df
-
-
-    def generate_signals(self, df):
-        df["Signal"] = 0
-        df.loc[df["SMA_Short"] > df["SMA_Long"], "Signal"] = 1  # Buy
-        df.loc[df["SMA_Short"] < df["SMA_Long"], "Signal"] = -1  # Sell
-        return df
-
-
-    def execute_trade(self, signal):
-        print(f"Signal: {signal}, Current position size: {self.position.size}")
-        
-        if signal == 1:
+        i = len(self.data) - 1
+        if pd.isna(self.sma_short[i]) or pd.isna(self.sma_long[i]):
+            return  # Skip if SMAs are not yet available
+        if self.sma_short[i] > self.sma_long[i] and not self.position:
             self.buy()
-        elif signal == -1:
+        elif self.sma_short[i] < self.sma_long[i] and self.position.is_long:
             self.sell()
 
 
-    def run_strategy(self):
-        self.df = self.calculate_moving_averages(self.df)
-        self.df = self.generate_signals(self.df)
-        latest_signal = self.df["Signal"].iloc[-1]
-        self.execute_trade(latest_signal)
-
-
-def get_historical_data(symbol, timeframe="1Day", days=100):
-    """Fetch historical stock data from Alpaca API."""
-    end_date = datetime.datetime.now().strftime('%Y-%m-%d')  # Convert to 'YYYY-MM-DD'
-    start_date = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime('%Y-%m-%d')
-
-    barset = api.get_bars(symbol, timeframe, start=start_date, end=end_date, feed="iex").df
-    if barset.empty:
-        print("No data returned. Check your API access or symbol.")
-    return barset
-
-
-def calculate_moving_averages(df, short_window=20, long_window=50):
-    df["SMA_Short"] = df["close"].rolling(window=short_window).mean()
-    df["SMA_Long"] = df["close"].rolling(window=long_window).mean()
-    return df
-
-
-def generate_signals(df):
-    df["Signal"] = 0
-    df.loc[df["SMA_Short"] > df["SMA_Long"], "Signal"] = 1  # Buy
-    df.loc[df["SMA_Short"] < df["SMA_Long"], "Signal"] = -1  # Sell
-    return df
-
-
-def execute_trade(symbol, signal, portfolio_id):
-    try:
-        session = requests.Session()
-        url = "http://127.0.0.1:8000/get_positions"
-        params = {"portfolio_id": portfolio_id,"symbol": symbol}
-
-        response = session.get(url, cookies=session.cookies.get_dict(), params=params)
-        qty = response.json()["qty"]
-    except APIError:
-        qty = 0
-
-    if signal == 1:  # Buy
-        if qty == 0:  # Only buy if no existing position
-            session = requests.Session()
-            url = "http://127.0.0.1:8000/buy"
-            params = {"portfolio_id": portfolio_id, "symbol": symbol, "quantity": qty}
-
-            response = session.post(url, cookies=session.cookies.get_dict(), params=params)
-
-    elif signal == -1:  # Sell
-        if qty > 0:  # Only sell if currently holding the stock
-            session = requests.Session()
-            url = "http://127.0.0.1:8000/sell"
-            params = {"portfolio_id": portfolio_id, "symbol": symbol, "quantity": qty}
-
-            response = session.post(url, cookies=session.cookies.get_dict(), params=params)
-
-def run_strategy(symbol, portfolio_id):
-    df = get_historical_data(symbol)
-    df = calculate_moving_averages(df)
-    df = generate_signals(df)
-    latest_signal = df["Signal"].iloc[-1]
-    execute_trade(symbol, latest_signal, portfolio_id)
-
-def SMA_visualizer():
-    symbol = "AAPL"  # You can change this to any stock ticker
-    df = get_historical_data(symbol)
-    print(df)
-
-    # Calculate moving averages
-    df = calculate_moving_averages(df)
-
-    # Plot stock price & moving averages
-    plt.figure(figsize=(12, 6))
-    plt.plot(df.index, df["close"], label="Closing Price", color="black", linewidth=1.5)
-    plt.plot(df.index, df["SMA_Short"], label="20-Day SMA", color="blue", linestyle="dashed")
-    plt.plot(df.index, df["SMA_Long"], label="50-Day SMA", color="red", linestyle="dashed")
-
-    # Formatting the plot
-    plt.xlabel("Date")
-    plt.ylabel("Price ($)")
-    plt.title(f"{symbol} Stock Price with Moving Averages")
-    plt.legend()
-    plt.grid(True)
-
-    # Show plot
-    plt.show()
-
-def get_data(symbol, start_date, end_date, timeframe='1Day'):
-    """Fetch historical stock data from Alpaca API."""
-    barset = api.get_bars(symbol, timeframe, start=start_date, end=end_date, feed="iex").df
-
-    if barset.empty:
-        print("No data returned. Check your API access or symbol.")
-
-    return barset
-
 
 if __name__ == "__main__":
-    symbol = "AAPL"
-    start_date = "2020-01-01"
-    end_date = "2023-01-01"
-
-    df = get_data(symbol, start_date, end_date)
+    df = get_data("AAPL")
     df = df.reset_index()
-    df = df.rename(columns={
-    'timestamp': 'Date',
-    'open': 'Open',
-    'high': 'High',
-    'low': 'Low',
-    'close': 'Close',
-    'volume': 'Volume'
-    })
-
     # Keep only required columns for Backtest
     df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
     df['Date'] = pd.to_datetime(df['Date'])
     df.set_index('Date', inplace=True)
-    print(df.head())
-    bt = Backtest(df, SMACross, cash=10000, commission=.002)
-    result = bt.run()
+    bt = Backtest(df, SMACross, cash=100000, commission=.002)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        result = bt.run()
     print(result)
-    #bt.plot()
-    import matplotlib.pyplot as plt
     equity = result['_equity_curve']['Equity']
 
     # Plot it
