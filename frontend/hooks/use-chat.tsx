@@ -1,4 +1,4 @@
-import { ChatBubbleType } from "@/app/dashboard/adviser/components/chat-bubble"; // Ensure this path is correct and ChatBubbleType is exported from this module
+import { ChatBubbleType } from "@/app/dashboard/adviser/chat-bubble"; // Ensure this path is correct and ChatBubbleType is exported from this module
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 

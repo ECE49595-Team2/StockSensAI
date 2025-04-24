@@ -1,5 +1,5 @@
-import ChatWindow from "./components/chat-window";
-import ChatBox from "./components/chat-box";
+import ChatWindow from "./chat-window";
+import ChatBox from "./chat-box";
 
 function Adviser() {
     return (

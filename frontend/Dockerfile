@@ -28,6 +28,8 @@ EXPOSE 3000
 # Switch to a non-root user for security
 USER node
 
+RUN pnpm run build
+
 # Build and start the Next.js application
-CMD ["sh", "-c", "pnpm run build && pnpm run start"]
+CMD ["sh", "-c", "pnpm run start"]
 

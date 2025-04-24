@@ -17,6 +17,7 @@ import { useEffect, useState } from "react"
 import Submit from "../submit"
 import { useRouter } from "next/navigation";
 import { toast } from "sonner"
+import { useUser } from "@/hooks/use-user"
 
 const SignUpSchema = z.object({
     name: z.string().min(1, { message: "Name must be at least 1 character" }),
@@ -51,6 +52,7 @@ export function AuthForm({ type }: { type: AuthFormType }) {
     const FormSchema = type === AuthFormType.SignUp ? SignUpSchema : LogInSchema
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+    const setUser = useUser((state) => state.setUser);
     const router = useRouter();
 
     useEffect(() => { }, [isSubmitting])
@@ -78,7 +80,6 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                     email: data.email,
                     password: data.password,
                     name: data.name,
-                    registered: false,
                 }),
                 headers: {
                     "Content-Type": "application/json",
@@ -99,9 +100,11 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                         headers: {
                             "Content-Type": "application/json",
                         },
-                    }).then((response) => {
+                    }).then(async (response) => {
                         if (response.ok) {
-                            setTimeout(() => { router.push("/api/register") }, 0);
+                            const newUser = await response.json();
+                            setUser({...newUser, email: data.email });
+                            setTimeout(() => { router.push("/dashboard?newuser=true") }, 0);
                         } else {
                             toast.error("Failure: Failed to login. Try again.", {
                                 description: "Unknown error occurred.",
@@ -112,8 +115,6 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                         }
                     }
                     )
-                    
-
 
                 } else {
                     toast.error("Failure: Failed to signup. Try again.", {
@@ -129,6 +130,7 @@ export function AuthForm({ type }: { type: AuthFormType }) {
         else
             fetch("/api/user", {
                 method: "POST",
+                credentials: "include",
                 body: JSON.stringify({
                     email: data.email,
                     password: data.password,
@@ -136,14 +138,17 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-            }).then((response) => {
+            }).then(async (response) => {
                 if (response.ok) {
                     toast.success("Success", {
                         richColors: true,
                         description: "Logging in...",
                         position: "top-center",
                     });
+                    const newUser = await response.json();
+                    setUser({...newUser, email: data.email });
                     setTimeout(() => { router.push("/dashboard") }, 0);
+                    
                 } else {
                     toast.error("Failure: Failed to login. Try again.", {
                         description: "Invalid email or password.",
