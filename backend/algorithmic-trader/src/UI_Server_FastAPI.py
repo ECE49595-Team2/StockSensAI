@@ -16,11 +16,11 @@ import pandas as pd
 load_dotenv()
 
 # for local testing
-# COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
+COUCHDB_URL = "http://admin:admin@127.0.0.1:5984"
 # for deployment
-COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
-COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
-COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
+# COUCH_DB_USER = os.environ.get("COUCHDB_USER", os.getenv("COUCHDB_USER"))
+# COUCH_DB_PASSWORD = os.environ.get("COUCHDB_PASSWORD", os.getenv("COUCHDB_PASSWORD"))
+# COUCHDB_URL = f"http://{COUCH_DB_USER}:{COUCH_DB_PASSWORD}@database:5984"
 
 DB_NAME = "portfolio"
 server = couchdb.Server(COUCHDB_URL)
