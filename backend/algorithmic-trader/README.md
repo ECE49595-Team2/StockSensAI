@@ -1,4 +1,4 @@
-# Swagger documentation is hosted here https://app.swaggerhub.com/apis/purdue-847/fast-api/0.1.0#/
+# Swagger documentation is hosted here https://app.swaggerhub.com/apis/purdue-847/fast-api/0.3.0
 # Instructions for how to run UI_Server_FastAPI.py locally
 - Install docker
 - Make sure you are in the backend/algorithmic-trader directory
