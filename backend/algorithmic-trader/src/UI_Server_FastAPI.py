@@ -394,3 +394,34 @@ async def single_day(portfolio_id: str):
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/multiple_day_performance")
+async def multiple_day(portfolio_id: str, symbol: str, days: int = 7):
+    try:
+        user_doc = db.get(portfolio_id)
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        
+        positions = user_doc.get("positions", {})
+        current_values = get_stock_prices([symbol])
+        stock = yf.Ticker(symbol)
+        hist = stock.history(period=f'{days}d')
+        print(hist)
+        history = []
+        for x in range(days):
+            day = datetime.combine((datetime.now() - timedelta(days=days - 1 - x)).date(), datetime.max.time())
+            formatted_day = day.strftime("%Y-%m-%d")
+            open_price = hist.loc[formatted_day, "Open"] if formatted_day in hist.index else None
+            close_price = hist.loc[formatted_day, "Close"] if formatted_day in hist.index else None
+            if(x != days - 1):
+                gain = ((close_price - open_price) / open_price) * 100 if open_price is not None else 0
+            else:
+                gain = ((current_values[symbol] - open_price) / open_price) * 100 if open_price is not None else 0
+            new_entry = {"date": formatted_day, "day_gain": gain}
+            history.append(new_entry)
+        
+        return {"data": {"quantity": positions.get(symbol, 0), "history": history}}
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
