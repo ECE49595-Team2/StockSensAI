@@ -36,8 +36,14 @@ jobs:
     - name: Log in to GHCR
       run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ECE49595-Team2 --password-stdin
       
-    - name: Build the Docker image
-      run: docker build --file ./backend/algorithmic-trader/Dockerfile --tag ghcr.io/ece49595-team2/stocksensai-algorithmic:latest ./backend/algorithmic-trader
+    - name: Build and push multi-arch Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend/algorithmic-trader
+        file: ./backend/algorithmic-trader/Dockerfile
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ghcr.io/ece49595-team2/stocksensai-algorithmic:latest
 
     - name: Push the Docker image to GHCR
       run: docker push ghcr.io/ece49595-team2/stocksensai-algorithmic:latest
