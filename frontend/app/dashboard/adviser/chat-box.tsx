@@ -1,6 +1,6 @@
 "use client";
 import SendButton from "./send-button";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useChatStore } from "@/hooks/use-chat";
 import { Skeleton } from "@/shadcn/ui/skeleton";
 import { ChatBubbleType } from "./chat-bubble";
@@ -59,10 +59,6 @@ function ChatBox() {
         }
 
     }
-
-    // useEffect(() => {
-
-    // }, [loading]);
 
     return (
         <>

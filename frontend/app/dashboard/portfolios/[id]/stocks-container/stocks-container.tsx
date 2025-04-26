@@ -6,6 +6,7 @@ import { LucideFrown } from "lucide-react";
 import { cookies } from "next/headers";
 import StocksContainerClient from "./stocks-container-client";
 import AddStockButton from "./add-stock-button";
+import Image from "next/image";
 
 type StockData = number;
 type Stocks = {
@@ -50,7 +51,7 @@ async function StocksContainer({ children, id }: { children: React.ReactNode, id
                 {
                     Object.keys(stocks).length === 0 ?
                         <div className="flex flex-col flex-1 justify-center items-center gap-5 p-10">
-                            <LucideFrown size={'5rem'} color="grey" />
+                            <Image src={"/katana.svg"} alt="No stocks" width={100} height={100} className="w-24 h-24 opacity-70" />
                             <h1 className="text-2xl font-bold text-gray-500">No stocks found</h1>
                             <p className="text-gray-500">Add stocks to your portfolio to see them here.</p>
                             <AddStockButton id={id} />

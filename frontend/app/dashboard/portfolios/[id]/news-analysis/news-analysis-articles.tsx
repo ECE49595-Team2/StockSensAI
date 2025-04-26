@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Card, CardContent } from "@/shadcn/ui/card";
-import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from "@/shadcn/ui/drawer";
+import { Drawer, DrawerContent, DrawerTitle } from "@/shadcn/ui/drawer";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/shadcn/ui/carousel";
 import { Button } from "@/shadcn/ui/button";
 

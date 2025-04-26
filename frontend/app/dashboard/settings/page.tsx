@@ -1,12 +1,8 @@
 "use server";
-import { Button } from "@/shadcn/ui/button";
 import nano from "nano";
 import { cookies } from "next/headers";
 import { COUCHDB_URL } from "@/app/env";
-import Combobox from "@/components/combobox";
-import { SettingsType } from "./section";
 import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
-import { Separator } from "@radix-ui/react-separator";
 import Settings_Client from "./settings-client";
 
 async function Settings() {
@@ -29,9 +25,8 @@ async function Settings() {
         return <p className="text-red-500">You must be logged in to view this page.</p>;
     }
     const prefsDb = client.db.use("prefs");
-    const userPrefs = await prefsDb.get(email) as unknown as { prefs: { [key: string]: any } };
-    const prefs: { [key: string]: any } = userPrefs.prefs;
-    const name: string = prefs.name;
+    const userPrefs = await prefsDb.get(email) as unknown as { prefs: { name: string } };
+    const name: string = userPrefs.prefs.name;
 
     return (
         <div className="w-full h-full flex flex-col gap-10 text-black justify-start">

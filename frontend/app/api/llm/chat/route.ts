@@ -1,4 +1,4 @@
-import { COUCHDB_URL } from "@/app/env";
+import { COUCHDB_URL, LLM_URL } from "@/app/env";
 import nano from "nano";
 import { cookies } from "next/headers";
 
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const model = userPrefs.prefs.llmSettings.model;
 
     const messages: Message[] = await request.json() as Message[];
-    const url = "http://localhost:8011/chat";
+    const url = `${LLM_URL}/chat`;
 
     console.log("Sending messages:", messages);
     const response = await fetch(url, {

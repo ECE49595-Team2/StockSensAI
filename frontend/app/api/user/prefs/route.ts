@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import nano from "nano";
 import { cookies } from "next/headers";
 
-export async function GET(req: Request)
+export async function GET()
 {
     const authSession = (await cookies()).get("AuthSession");
     if (!authSession) {

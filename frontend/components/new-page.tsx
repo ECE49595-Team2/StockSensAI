@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Nav from "./nav";
 
 interface PageProps {
@@ -8,10 +9,13 @@ interface PageProps {
 function Page({ children, className }: PageProps) {
   return (
     <>
-      <Nav />
-        <div className={`pt-[7rem] flex flex-col gap-4 border-box w-screen ${className}`}>
-          {children}
-        </div>
+      <Suspense fallback={<div className="w-screen h-screen bg-background flex items-center justify-center">Loading...</div>}>
+        <Nav />
+      </Suspense>
+      <div className={`pt-[7rem] flex flex-col gap-4 border-box w-screen ${className}`}>
+        {children}
+
+      </div>
     </>
   );
 

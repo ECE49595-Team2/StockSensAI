@@ -56,7 +56,7 @@ function UserDropdown() {
             }
         }
         fetchUserData(user?.email);
-    }, [user?.email, user?.name, setUser]);
+    }, [user?.email, setUser]);
 
     const logout = async () => {
         const response = await fetch("/api/user", {

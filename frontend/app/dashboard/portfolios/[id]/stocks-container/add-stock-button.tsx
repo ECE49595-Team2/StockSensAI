@@ -42,7 +42,7 @@ function AddStockButton({ id }: { id: string }) {
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button className="flex items-center justify-center h-[screen] md:w-[8rem] sm:h-[8rem] sm:w-full" >
+                <Button className="flex items-center justify-center h-[4rem]" >
                     <Plus size={"10rem"} /> Add Stock
                 </Button>
             </PopoverTrigger>

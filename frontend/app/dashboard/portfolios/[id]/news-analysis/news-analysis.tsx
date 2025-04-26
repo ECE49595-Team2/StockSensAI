@@ -21,41 +21,33 @@ function NewsAnalysis() {
     const [response, setResponse] = useState<NewsResponse | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
-    async function fetchNews() {
-        if (selection) {
-            setLoading(true);
-            const response = await fetch(`/api/llm/news/${selection}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                cache: "force-cache",
-            });
-
-            if (response.ok) {
-                const data: NewsResponse = await response.json();
-                setResponse(data);
-                setLoading(false);
-            } else {
-                console.error("Failed to fetch news");
-            }
-        }
-    }
-
     useEffect(() => {
-        console.log("response", response);
     }, [response, loading]);
 
     useEffect(() => {
-        let isMounted = true;
-        console.log(selection);
+        async function fetchNews() {
+            if (selection) {
+                setLoading(true);
+                const response = await fetch(`/api/llm/news/${selection}`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    cache: "force-cache",
+                });
+    
+                if (response.ok) {
+                    const data: NewsResponse = await response.json();
+                    setResponse(data);
+                    setLoading(false);
+                } else {
+                    console.error("Failed to fetch news");
+                }
+            }
+        }
 
         setLoading(true);
         fetchNews();
-
-        return () => {
-            isMounted = false;
-        };
     }, [selection, setResponse]);
 
     return (

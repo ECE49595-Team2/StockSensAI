@@ -9,7 +9,7 @@ async function StockChart({ id }: { id: string }) {
     const authSession = (await cookies()).get("AuthSession");
     if (!authSession) {
         return <Card className="p-4 block overflow-hidden col-span-2">
-            <h1 className="text-md font-bold text-gray-500">Position history</h1>
+            <h1 className="text-md font-bold text-gray-500">Purchase history</h1>
             <p className="text-4xl font-bold slide-up">N/a</p>
         </Card>;
     }
@@ -38,15 +38,15 @@ async function StockChart({ id }: { id: string }) {
 
         return (
             <Card className="p-4">
-                <h1 className="text-md font-bold text-gray-500">Position history</h1>
-                <StockChart_Client transactions={transactions} />
+                <h1 className="text-md font-bold text-gray-500">Purchase history</h1>
+            <StockChart_Client transactions={transactions} />
             </Card>
         );
 
     } catch (error) {
         console.error("Error fetching portfolio transactions:", error);
         return <Card className="p-4 block overflow-hidden col-span-2">
-            <h1 className="text-md font-bold text-gray-500">Position history</h1>
+            <h1 className="text-md font-bold text-gray-500">Purchase history</h1>
             <p className="text-4xl font-bold slide-up">N/a</p>
         </Card>;
     }

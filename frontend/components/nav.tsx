@@ -67,7 +67,7 @@ function Nav() {
         setMessages(() => [] as { content: string; role: ChatBubbleType }[]);
       }
     })
-  }, [unauthorizedParam, setUser]);
+  }, [unauthorizedParam, setUser, setMessages]);
 
   useEffect(() => {
     const handleUnauthorized = () => {
@@ -93,14 +93,12 @@ function Nav() {
             <SidebarTrigger size={'icon'} className='sm:hidden flex' />
             <Link href='/'>
                 <div id="logo" className={`flex flex-row gap-2 items-center font-anton text-xl select-none`}>
-
                     <Image src={Logo} alt="logo" width={100} height={100} draggable={false} />
-                    <h1>
-                        <span className='text-primary'>Stock</span>
-                        <span className='text-secondary'>Sens</span>
+                    <h1 className='hover:text-shadow-[0px_0px_5px_rgba(255,255,255,0.8)] hover:text-shadow-primary transition-all duration-300'>
+                        <span className='text-gray-300'>Stock</span>
+                        <span className='text-gray-300'>Sens</span>
                         <span className='text-gray-300'>AI</span>
                     </h1>
-
                 </div>
             </Link>
             <div id="navitems" className='hidden sm:flex flex-row gap-4'>

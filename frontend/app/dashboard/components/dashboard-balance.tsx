@@ -62,7 +62,7 @@ export async function BalanceWidget() {
                 if (buyingPower === null) {
                     buyingPower = 0;
                 }
-                buyingPower! += doc.buying_power[0][0];
+                buyingPower! += doc.buying_power[doc.buying_power.length - 1][0];
             } else {
                 buyingPower = null;
             }

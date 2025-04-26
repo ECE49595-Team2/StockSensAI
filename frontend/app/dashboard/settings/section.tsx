@@ -1,9 +1,10 @@
+import React from "react";
 import SettingsCard from "./settings-card";
 
 export type SettingsType = {
     subtitle: string;
     description: string;
-    value: any;
+    value: React.ReactNode;
 }
 
 function Section({ title, description, settings }: { title: string; description: string; settings: SettingsType[] }) {

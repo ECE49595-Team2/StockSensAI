@@ -1,6 +1,5 @@
 "use client";
 import { usePortfoliosStore } from "@/hooks/use-portfolios";
-import { useUser } from "@/hooks/use-user";
 import { Button } from "@/shadcn/ui/button";
 import { Card, CardDescription, CardTitle } from "@/shadcn/ui/card";
 import { X } from "lucide-react";

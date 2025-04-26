@@ -1,10 +1,9 @@
-"use server";
 import Block from "@/components/block";
 import Footer from "@/components/footer";
 import Landing from "@/components/landing";
 import Page from "@/components/new-page";
 
-export default async function Home() {
+export default function Home() {
   return (
     <Page>
       <Landing />

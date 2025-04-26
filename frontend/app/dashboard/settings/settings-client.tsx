@@ -6,8 +6,18 @@ import { toast } from "sonner";
 import { Button } from "@/shadcn/ui/button";
 import { Switch } from "@/shadcn/ui/switch";
 
-function Settings_Client({ savedSettings }: { savedSettings: { [key: string]: any } }) {
-    const [settings, setSettings] = useState<{ [key: string]: any }>(savedSettings);
+type LLMSettings = {
+    model?: string;
+    fullPerspective?: boolean;
+};
+
+type Settings = {
+    llmSettings?: LLMSettings;
+    [key: string]: unknown;
+};
+
+function Settings_Client({ savedSettings }: { savedSettings: Settings }) {
+    const [settings, setSettings] = useState<Settings>(savedSettings);
     const [isModified, setIsModified] = useState(false);
 
     async function submitSettings() {

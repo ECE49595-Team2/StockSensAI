@@ -1,6 +1,7 @@
 import { COUCHDB_URL } from "@/app/env";
 import nano from "nano";
 import { parse } from "cookie";
+import { ALGO_URL } from "@/app/env";
 
 export async function GET(req: Request): Promise<Response> {
     const cookies = parse(req.headers.get("cookie") || "");
@@ -34,7 +35,7 @@ export async function GET(req: Request): Promise<Response> {
     });
 
     const portfolio_id: string = results.docs[0]._id;
-    const algoResponse = await fetch(`http://localhost:8000/update-account-history?portfolio_id=${portfolio_id}`, {
+    const algoResponse = await fetch(`${ALGO_URL}/update-account-history?portfolio_id=${portfolio_id}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
