@@ -16,6 +16,7 @@ services:
         condition: on-failure
 
   algorithmic-trader:
+    platform: linux/amd64
     image: ghcr.io/ece49595-team2/stocksensai-algorithmic:latest
     environment: 
       - ALPACA_API_KEY=${ALPACA_API_KEY}

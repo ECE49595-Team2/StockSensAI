@@ -9,6 +9,11 @@ import { useEffect, useState } from 'react';
 import Logo from '@/public/logo.png';
 import AuthDrawer from './auth/auth-drawer';
 import { useUser } from '@/hooks/use-user';
+import { ChatBubbleType } from '@/app/dashboard/adviser/chat-bubble';
+import { useChatStore } from '@/hooks/use-chat';
+import User from '@/models/user-model';
+import { useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 
 type NavigationItemsType = {
     [key: string]: {
@@ -26,6 +31,10 @@ function Nav() {
 
     const [scrollY, setScrollY] = useState(0);
     const user = useUser((state) => state.user);
+    const searchParams = useSearchParams();
+    const setUser = useUser((state) => state.setUser);
+    const setMessages = useChatStore((state => state.setMessages));
+    const unauthorizedParam = searchParams.get('unauthorized');
     
 
     useEffect(() => {
@@ -41,6 +50,43 @@ function Nav() {
             window.removeEventListener('scroll', handleScroll);
         };
     }, [user]);
+
+
+  useEffect(() => {
+    fetch("/api/user/verify", {
+      method: "GET",
+      cache: "no-store",
+    }).then(async (response) => {
+      const data = await response.json();
+      console.log("data", data);
+      if (response.ok && data.email) {
+        const user = new User(data.email);
+        setUser(user);
+      } else {
+        setUser(undefined);
+        setMessages(() => [] as { content: string; role: ChatBubbleType }[]);
+      }
+    })
+  }, [unauthorizedParam, setUser]);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      const unauthorized: boolean = unauthorizedParam === 'true';
+      if (unauthorized) {
+        toast.error("You are not authorized to view this page.", {
+          richColors: true,
+          description: "Please log in to view this page.",
+          position: "top-center"
+        });
+        window.history.replaceState({}, document.title, "/");
+        return;
+      }
+    }
+
+    setTimeout(() => {
+      handleUnauthorized();
+    }, 0);
+  }, [unauthorizedParam]);
 
     return (
         <nav className={`flex flex-row justify-start sm:justify-around items-center p-4 fixed w-full z-50 h-[7rem] transition-all duration-10 backdrop-blur-lg ${scrollY >= 0.6 ? 'shadow-lg' : ''}`} style={{ backgroundColor: `rgba(61, 43, 86, ${scrollY >= 0.7 ? 0.7 : scrollY})` }}>

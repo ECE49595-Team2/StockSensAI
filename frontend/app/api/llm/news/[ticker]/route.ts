@@ -23,6 +23,6 @@ export async function GET(_: Request, { params }: { params: Promise<{ ticker: st
     console.log(data);
 
     return new Response(JSON.stringify(data), {
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Cache-Control": "max-age=86400" },
     });
 }

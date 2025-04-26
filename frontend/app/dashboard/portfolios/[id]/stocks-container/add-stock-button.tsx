@@ -4,6 +4,7 @@ import { Button } from "@/shadcn/ui/button";
 import { Input } from "@/shadcn/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/ui/popover";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
 function AddStockButton({ id }: { id: string }) {
     const [stockSymbol, setStockSymbol] = useState("");
@@ -18,13 +19,18 @@ function AddStockButton({ id }: { id: string }) {
             headers: {
                 "Content-Type": "application/json",
             },
+            body: JSON.stringify({ quantity: 1})
         })
             .then((response) => {
                 if (response.ok) {
                     window.location.reload();
                     console.log("Stock added successfully");
                 } else {
-                    throw new Error("Failed to add stock");
+                    toast.error("Failed to add stock", {
+                        description: "Stock symbol might be invalid or already exists.",
+                        richColors: true,
+                        position: "top-center",
+                    });
                 }
             })
             .catch((error) => {
@@ -36,8 +42,8 @@ function AddStockButton({ id }: { id: string }) {
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button className="p-8">
-                    <Plus className="mr-2" size={"1rem"} />
+                <Button className="flex items-center justify-center h-[screen] md:w-[8rem] sm:h-[8rem] sm:w-full" >
+                    <Plus size={"10rem"} /> Add Stock
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80">

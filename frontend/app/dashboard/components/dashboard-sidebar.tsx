@@ -1,4 +1,3 @@
-"use client";
 import { Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarMenuItem, SidebarGroupLabel, SidebarGroupContent, SidebarMenuButton, SidebarMenu, SidebarFooter } from "@/shadcn/ui/sidebar";
 import NavigationItems from "../nav-items";
 import { JSX } from "react";

@@ -4,7 +4,7 @@ class User {
     public prefs: { [key: string]: any } = {};
 
     public async fetchUserData() {
-        const response = await fetch(`/api/user/prefs/${this.email}`, {
+        const response = await fetch("/api/user/prefs/", {
             method: "GET",
             credentials: "include",
             cache: "no-store",

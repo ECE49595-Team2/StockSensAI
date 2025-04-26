@@ -29,12 +29,13 @@ interface ComboboxProps {
     items: ComboboxItem[];
     placeholderEmpty: string;
     placeholderValue: string;
-
+    placeholderSearchInput: string;
+    value: string;
+    setValue: ( value: string ) => void;
 }
 
-export default function Combobox({ items, placeholderEmpty, placeholderValue }: ComboboxProps) {
+export default function Combobox({ items, placeholderEmpty, placeholderValue, placeholderSearchInput, value, setValue  }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -53,7 +54,7 @@ export default function Combobox({ items, placeholderEmpty, placeholderValue }: 
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0">
         <Command>
-          <CommandInput placeholder="Search framework..." className="h-9" />
+          <CommandInput placeholder={placeholderSearchInput} className="h-9" />
           <CommandList>
             <CommandEmpty>{placeholderEmpty}</CommandEmpty>
             <CommandGroup>

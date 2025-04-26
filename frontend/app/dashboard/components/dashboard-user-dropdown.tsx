@@ -42,7 +42,7 @@ function UserDropdown() {
             if (!email) {
                 return null;
             }
-            const response = await fetch(`/api/user/prefs/${email}`, {
+            const response = await fetch("/api/user/prefs/", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",

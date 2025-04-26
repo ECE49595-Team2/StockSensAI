@@ -37,7 +37,7 @@ function AddPortfolioForm() {
             .digest("hex")
             .slice(0, 8);
 
-        fetch(`/api/user/portfolios/${user?.email}/${id}`, {
+        fetch(`/api/portfolio/${id}`, {
             method: "PUT",
             body: JSON.stringify(values),
             headers: {

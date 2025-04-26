@@ -3,7 +3,6 @@ const NavigationItems = {
         title: 'About',
         description: 'Learn more about StockSensAI',
         subroutes: {
-            '/about/mission': 'Our Mission',
             '/about/team': 'Our Team',
             '/about/tutorial': 'Tutorial',
         }

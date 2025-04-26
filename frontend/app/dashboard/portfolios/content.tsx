@@ -19,7 +19,7 @@ function PortfolioContent({ edit }: PortfolioContentProps) {
 
     useEffect(() => {
         if (user) {
-            fetch(`/api/user/portfolios/${user.email}`, {
+            fetch("/api/user/portfolios/", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",

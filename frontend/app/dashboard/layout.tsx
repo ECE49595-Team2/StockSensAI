@@ -1,10 +1,11 @@
 "use client";
 import "../globals.css";
 import DashboardSidebar from "./components/dashboard-sidebar";
-import { SidebarProvider } from "@/shadcn/ui/sidebar";
+import { SidebarProvider, useSidebar } from "@/shadcn/ui/sidebar";
 import DashboardMenubar from "./components/dashboard-menubar";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Layout({
     children,

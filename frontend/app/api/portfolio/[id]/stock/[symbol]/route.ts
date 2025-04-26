@@ -6,6 +6,7 @@ type Portfolio = {
     date_created: string;
     user: string;
     name: string;
+    description: string;
     transactions: object[];
     buying_power: number[][];
     positions: { [key: string]: number };
@@ -17,28 +18,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ symbol:
     const queries = await params;
     const symbol = queries.symbol;
     const id = queries.id;
+    const { quantity } = await req.json();
+    const algoUrl = `http://localhost:8000/buy?portfolio_id=${id}&symbol=${symbol}&quantity=${quantity}`;
 
-    const client = nano(COUCHDB_URL_AUTH);
-    const db = client.db.use("portfolio");
+    const response = await fetch(algoUrl, {
+        method: "POST", 
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
 
-    try {
-        const existingDoc: Portfolio = await db.get(id) as unknown as Portfolio;
-        if (!existingDoc) {
-            return new Response(JSON.stringify({ error: "Portfolio not found" }), { status: 404 });
-        }
+    console.log("Response from algorithm:", response);
 
-        const updatedDoc = {
-            ...existingDoc,
-            positions: {
-                ...existingDoc.positions,
-                [symbol]: (existingDoc.positions[symbol] || 0) + 1,
-            },
-        };
-
-        await db.insert(updatedDoc);
-
-    } catch (error) {
-        return new Response(JSON.stringify({ error: "Failed to update portfolio" }), { status: 500 });
+    if (!response.ok) {
+        return new Response(JSON.stringify({ error: "Failed to execute algorithm" }), { status: 500 });
     }
 
     return new Response(JSON.stringify({ success: true }), { status: 200 });

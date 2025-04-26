@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 import nano from "nano";
-import { COUCHDB_URL_AUTH } from "@/app/env";
+import { COUCHDB_URL } from "@/app/env";
+import { parse } from "cookie";
 
-export async function GET(_: Request, { params }: { params: Promise<{ email: string }> }): Promise<NextResponse> {
+export async function GET(req: Request): Promise<NextResponse> {
 
-    const queries = await params;
-    const email = queries.email;
-    const client = nano(COUCHDB_URL_AUTH);
+    const client = nano({
+        url: COUCHDB_URL,
+        requestDefaults: {
+            headers: {
+                Cookie: `AuthSession=${parse(req.headers.get('cookie') || '').AuthSession}`,
+            },
+        },
+    });
+    const email = (await client.session()).userCtx.name;
     const db = client.db.use("portfolio");
 
     const result = await db.find({

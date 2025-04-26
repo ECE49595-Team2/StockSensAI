@@ -20,7 +20,7 @@ import { toast } from "sonner"
 import { useUser } from "@/hooks/use-user"
 
 const SignUpSchema = z.object({
-    name: z.string().min(1, { message: "Name must be at least 1 character" }),
+    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
     email: z.string().email({ message: "Invalid email address." }),
     password: z.string()
         .min(8, { message: "Password must be at least 8 characters." })
@@ -85,7 +85,7 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                     "Content-Type": "application/json",
                 }
             }).then((response => {
-                    if (response.ok) {
+                if (response.ok) {
                     toast.success("Success", {
                         richColors: true,
                         description: "Signing up...",
@@ -101,9 +101,10 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                             "Content-Type": "application/json",
                         },
                     }).then(async (response) => {
+                        console.log("Response from /api/user:", response);
                         if (response.ok) {
                             const newUser = await response.json();
-                            setUser({...newUser, email: data.email });
+                            setUser({ ...newUser, email: data.email });
                             setTimeout(() => { router.push("/dashboard?newuser=true") }, 0);
                         } else {
                             toast.error("Failure: Failed to login. Try again.", {
@@ -146,9 +147,9 @@ export function AuthForm({ type }: { type: AuthFormType }) {
                         position: "top-center",
                     });
                     const newUser = await response.json();
-                    setUser({...newUser, email: data.email });
+                    setUser({ ...newUser, email: data.email });
                     setTimeout(() => { router.push("/dashboard") }, 0);
-                    
+
                 } else {
                     toast.error("Failure: Failed to login. Try again.", {
                         description: "Invalid email or password.",

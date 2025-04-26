@@ -16,17 +16,15 @@ interface PortfoliosCardProps {
 
 function PortfoliosCard({ title, description, endpoint, edit }: PortfoliosCardProps) {
     const router = useRouter();
-    const user = useUser((state) => state.user);
     const portfolios = usePortfoliosStore((state) => state.portfolios);
     const setPortfolios = usePortfoliosStore((state) => state.setPortfolios);
     const triggerRefresh = usePortfoliosStore((state) => state.triggerRefresh);
     const [pressed, setPressed] = useState(false);
-    const email = user?.email;
 
     useEffect(() => { }, [edit]);
 
     const handleDelete = () => {
-        fetch(`/api/user/portfolios/${email}/${endpoint}`, {
+        fetch(`/api/portfolio/${endpoint}`, {
             method: "DELETE",
             credentials: "include",
             cache: "no-store",
@@ -45,7 +43,7 @@ function PortfoliosCard({ title, description, endpoint, edit }: PortfoliosCardPr
             onMouseDown={() => setPressed(true)}
             onMouseUp={() => setPressed(false)}
             onMouseLeave={() => setPressed(false)}
-            className={`relative cursor-pointer bg-secondary text-black p-4 ${pressed ? "scale-95 transition-transform duration-150" : "transition-transform duration-150"}`}
+            className={`max-w-[20rem] relative cursor-pointer bg-secondary text-black p-4 ${pressed ? "scale-95 transition-transform duration-150" : "transition-transform duration-150"}`}
             onClick={() => router.push(`/dashboard/portfolios/${endpoint}`)} 
         >
             {edit &&
