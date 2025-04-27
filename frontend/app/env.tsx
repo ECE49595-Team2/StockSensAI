@@ -5,4 +5,4 @@ export const COUCHDB_URL_AUTH = process.env.NODE_ENV === "production" ? `http://
 export const COUCHDB_URL = process.env.NODE_ENV === "production" ? `http://database:5984` : `http://localhost:5984`;
 
 export const ALGO_URL = process.env.NODE_ENV === "production" ? "http://algorithmic-trader:8000" : "http://localhost:8000";
-export const LLM_URL = process.env.NODE_ENV === "production" ? "http://llm-server:8011" : "http://localhost:8011";
+export const LLM_URL = process.env.NODE_ENV === "production" ? "http://llm-server:8011" : "http://localhost:8011";x
