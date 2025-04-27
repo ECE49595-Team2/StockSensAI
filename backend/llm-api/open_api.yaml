@@ -113,3 +113,126 @@ paths:
                     description: The AI's response
         '400':
           description: Bad request (e.g., missing message)
+  
+  /summary:
+    post:
+      summary: Get a one sentence summary of your portfolio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                positions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      ticker:
+                        type: string
+                        default: "TSLA"
+                        description: ticker of the stock
+                      count:
+                        type: number
+                        description: The amount of the user owns
+                      gain:
+                        type: number
+                        description: Percent gain/loss for the day
+                model:
+                  type: string
+                  enum: [DeepSeekR1, DeepSeekV3, LLAMA]
+                  default: LLAMA
+                  description: AI model to use for the response
+      responses:
+        '200':
+          description: Successful summary response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                    description: The AI's response
+        '400':
+          description: Bad request (e.g., missing ticker)
+  /fullPerspective:
+    post:
+      summary: Get full perspective analysis for a given ticker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticker:
+                  type: string
+                  default: "TSLA"
+                  description: Ticker Symbol for the stock
+                adverse_level:
+                  type: string
+                  enum: [seeking, neutral, adverse]
+                  default: neutral
+                  description: the risk adversity level the LLM should use as perspective
+                positions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        default: "01/01/2025"
+                        description: date of this particular gain (from previous)
+                      gain:
+                        type: number
+                        description: Percent gain/loss for the date
+                model:
+                  type: string
+                  enum: [DeepSeekR1, DeepSeekV3, LLAMA]
+                  default: LLAMA
+                  description: AI model to use for the response
+                news_analysis:
+                  type: string
+                  default: ""
+                  description: Any cached news analysis object to pass to reduce compute time (optional)
+                time_limit:
+                  type: number
+                  default: 0
+                  description: Time limit (in seconds for maximum article age, 0 for no time Limit) (optional)
+      responses:
+        '200':
+          description: Successfully analyzed news
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  action:
+                    type: string
+                    enum: [buy, sell, hold]
+                    description: The recommended action
+                  reasoning:
+                    type: string
+                    description: The rationale behind the recommendation
+                  sentiment_counts:
+                    type: object
+                    properties:
+                      negative:
+                        type: integer
+                        description: Count of negative sentiment articles
+                      neutral:
+                        type: integer
+                        description: Count of neutral sentiment articles
+                      positive:
+                        type: integer
+                        description: Count of positive sentiment articles
+                  model:
+                    type: string
+                    description: The model used for analysis
+              example:
+                action: "hold"
+                reasoning: "The stock has shown a significant gain of 1 on 4/19/2025, indicating a potential upward trend. Although there was a loss of -2 on 4/18/2025, the recent day gains of 0.13 and 0.1 on 4/21/2025 and 4/20/2025 respectively, suggest a recovery and potential for further growth. With a time limit of 0, implying a short-term focus, and the user's existing 20 quantity, buying more could capitalize on this momentum."
+        '400':
+          description: Bad request (e.g., missing ticker)

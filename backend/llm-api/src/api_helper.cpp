@@ -215,6 +215,8 @@ json getLlamaPrompt(const std::string& prompt, const std::string& model)
     // Call the get api with the prompt and api key authentication
     std::string apiRes = callExternalApiPost(OPEN_ROUTER_ENDPOINT, "POST", jsonPromptString, openRouterKey);
 
+    std::cout << apiRes << std::endl;
+
     // Parse the Json
     json apiJson = json::parse(apiRes);
 
@@ -554,4 +556,96 @@ json oneSentenceSummary(const json& positions, const std::string& model)
     };
 
     return responseJson;
+}
+
+json fullPerspective(const std::string& ticker, AverseLevel adverseLevel, const std::string& model, const json& data, const json& newsAnalysis, const double ageLim)
+{
+    // Layout the system prompt response format
+    json systemPromptFormatJson = {
+        {"action", "ENTER:buy/sell/hold"},
+        {"reasoning", "ADD A SUMMARY OF YOUR REASONING"}
+    };
+
+    json analysis;
+
+    if (newsAnalysis == NULL)
+    {
+        analysis = getNewsAnalysis(ticker, model, ageLim);
+    }
+    else
+    {
+        analysis = newsAnalysis;
+    }
+
+    analysis.erase("action");
+    
+    std::string systemPrompt;
+
+    switch (adverseLevel)
+    {
+        case RiskAdverse:
+            systemPrompt += "You are seeking stability and low risk on investments in the long term";
+            break;
+        case RiskSeeking:
+            systemPrompt += "You are seeking gain and high risk/high reward on investments in the short term";
+            break;
+        default:
+            systemPrompt += "You are seeking a balance between low risk and high risk on investments in the medium term";
+            break;
+    }
+
+    // Generate the system prompt
+    systemPrompt += "You are an expert investor that chats and gives advice to the user. Assume that all current news about a stock is derived from the information provided by news analysis and data. In other words, give useful information about a stock from the perpective you are given, just not hard current facts (that is assumed to come from the news analysis and data).";
+    systemPrompt += "\n\n";
+    systemPrompt += ticker + ":\n";
+    systemPrompt += newsAnalysis.dump();
+    systemPrompt += "\n\n";
+
+    if (data != NULL)
+    {
+        systemPrompt += "This is data on count and gain history of the stock the user owns:\n";
+        systemPrompt += data.dump();
+        systemPrompt += "\n\n";
+    }
+    
+    systemPrompt += "Your format will PURELY be in json using this template (no extra info outside of json notation):\n";
+    systemPrompt += systemPromptFormatJson.dump();
+
+    json responseLlama;
+    bool improperResponse = true;
+
+    // Check for a proper response using a while loop that sanitizes formatting
+    while (improperResponse)
+    {
+        json testPrompt = getLlamaPrompt(systemPrompt, model);
+
+        //std::cout << testPrompt["response"].get<std::string>() << std::endl;
+        //std::cout << "TRIMMED: " << jsonTrim(testPrompt["response"].get<std::string>()) << std::endl;
+
+        try
+        {
+            responseLlama = json::parse(jsonTrim(testPrompt["response"].get<std::string>()));
+
+            //std::cout << responseLlama << std::endl;
+
+            if (!responseLlama.empty())
+            {
+                // Check if the response contains the expected action and reasoning
+                std::string action = responseLlama["action"].get<std::string>();
+                std::string reasoning = responseLlama["reasoning"].get<std::string>();
+
+                // Check if the action is one of the expected values
+                if (action == "buy" || action == "sell" || action == "hold")
+                {
+                    improperResponse = false;  
+                }
+            }
+        }
+        catch (const json::exception& e)
+        {
+            std::cerr << "Json response from Llama Invalid Retrying..." << std::endl;
+        }
+    }
+
+    return responseLlama;
 }

@@ -26,6 +26,14 @@ const std::string LLAMA = "meta-llama/llama-3.3-70b-instruct:free";
 const std::string DEEPSEEK_R1 = "deepseek/deepseek-r1:free";
 const std::string DEEPSEEK_V3 = "deepseek/deepseek-chat-v3-0324:free";
 
+// Define agent adversities enum
+enum AverseLevel
+{
+    RiskAdverse,
+    RiskNeutral,
+    RiskSeeking
+};
+
 // Define a function to handle writing callbacks for CURL
 size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
@@ -52,5 +60,8 @@ json getChatCompletion(const std::vector<json>& conversation, const std::string&
 
 // One sentence summary function
 json oneSentenceSummary(const json& positions, const std::string& model);
+
+// Full perspective function
+json fullPerspective(const std::string& ticker, AverseLevel adverseLevel, const std::string& model, const json& data = NULL, const json& newsAnalysis = NULL, const double ageLim = 0);
 
 #endif
