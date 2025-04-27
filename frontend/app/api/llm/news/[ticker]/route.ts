@@ -1,7 +1,9 @@
+import { LLM_URL } from "@/app/env";
+
 export async function GET(_: Request, { params }: { params: Promise<{ ticker: string }> }) {
     const queries = await params;
     const ticker = queries.ticker;
-    const url = "http://localhost:8011/newsAnalysis";
+    const url = `${LLM_URL}/newsAnalysis`;
 
     const response = await fetch(url, {
         method: "POST",
