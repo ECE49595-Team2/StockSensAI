@@ -4,6 +4,9 @@ import NavigationItems from "@/app/nav-items";
 import { Separator } from "@/shadcn/ui/separator";
 import { Button } from "@/shadcn/ui/button";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import AuthDrawer from "./auth/auth-drawer";
+import { useUser } from "@/hooks/use-user";
 
 const navigationItems: NavigationItemsType = NavigationItems;
 
@@ -21,11 +24,17 @@ function MainSidebar() {
 
     const { setOpenMobile } = useSidebar();
     const navigator = useRouter();
+    const user = useUser((state) => state.user);
 
     const navigate = (url: string) => () => {
         setOpenMobile(false);
         navigator.push(url);
     }
+
+    useEffect(() => {
+        // Close the sidebar when the component mounts
+        setOpenMobile(false);
+    }, [setOpenMobile]);
 
     return (
         <Sidebar variant="floating" collapsible="offcanvas">
@@ -67,7 +76,11 @@ function MainSidebar() {
                     }
                 </ul>
                 <div className="p-4 w-full flex justify-center">
-                    <Button variant="default">Get Started</Button>
+                    {!user && (
+                        <AuthDrawer>
+                            <Button variant="default">Get Started</Button>
+                        </AuthDrawer>
+                    )}
                 </div>
             </SidebarContent>
         </Sidebar>

@@ -16,15 +16,23 @@ function ChatWindow() {
     }, [messages]);
 
     return (
-        <div className="overflow-scroll min-h-[100px] h-full min-w-[80%] bg-gray-100 p-3 rounded-lg inset-shadow-sm mt-3">
-            <AnimatePresence>
-                {messages.map((message, index) => (
-                    <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                        <ChatBubble key={index} text={message.text} type={message.type} />
-                    </motion.div>
-                ))}
-            </AnimatePresence>
-        </div>
+        <>
+            {messages.length === 0 ? (
+                <div className="flex justify-center items-center h-full">
+                    <p className="text-gray-500">Start a conversation with your AI adviser.</p>
+                </div>
+            ) :
+                <div className="overflow-scroll flex flex-1 flex-col min-w-[80%] bg-gray-100 p-3 rounded-lg inset-shadow-sm mt-3 max-w-[10rem]">
+                    <AnimatePresence>
+                        {messages.map((message, index) => (
+                            <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                                <ChatBubble key={index} text={message.content} type={message.role} />
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            }
+        </>
     );
 }
 

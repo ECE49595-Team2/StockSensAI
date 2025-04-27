@@ -10,7 +10,7 @@ function AddPortfolioDrawer({ edit }: { edit: boolean }) {
             <DrawerTrigger asChild>
                 <Button 
                 variant="default" 
-                className="text-white hover:bg-gray-200 hover:text-black cursor-pointer"
+                className="text-white hover:bg-gray-200 hover:text-black cursor-pointer active:scale-95 transition-transform"
                 disabled={edit}
                 ><Plus/> Add Portfolio</Button>
             </DrawerTrigger>

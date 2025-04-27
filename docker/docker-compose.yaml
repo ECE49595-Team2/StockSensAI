@@ -1,7 +1,7 @@
 services:
   frontend:
     platform: linux/amd64
-    image: ghcr.io/ece49595-team2/stocksensai-frontend@sha256:34c4c24dbd80494ce84d520570d167757c8418c1cfe9e64d8901d8dc04f113bc
+    image: ghcr.io/ece49595-team2/stocksensai-frontend:latest
     environment:
       - NODE_ENV=production
       - COUCHDB_URL=http://database:5984
@@ -16,6 +16,7 @@ services:
         condition: on-failure
 
   algorithmic-trader:
+    platform: linux/amd64
     image: ghcr.io/ece49595-team2/stocksensai-algorithmic:latest
     environment: 
       - ALPACA_API_KEY=${ALPACA_API_KEY}

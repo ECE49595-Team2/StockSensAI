@@ -14,7 +14,7 @@ function PortfolioMenubar({ edit, setEditMode }: PortfolioMenubarProps) {
             <AddPortfolioDrawer edit={edit}/>
             <Button 
                 variant={edit ? 'destructive' : 'default'}
-                className='text-white hover:bg-gray-200 hover:text-black cursor-pointer'
+                className='text-white hover:bg-gray-200 hover:text-black cursor-pointer active:scale-95 transition-transform'
                 onClick={() => setEditMode(!edit)}
             >{edit ? <X /> :  <Ellipsis />}{edit ? "Stop Editing" : "Edit Portfolios"}</Button>
        </div>

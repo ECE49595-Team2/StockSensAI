@@ -21,7 +21,7 @@ export default function RootLayout({
       <body
         className={'antialiased text-white'}
       >
-          <SidebarProvider defaultOpen={false}>
+          <SidebarProvider open={false} defaultOpen={false}>
             <MainSidebar />
             <SidebarInset>
               <article className="flex-1">

@@ -36,7 +36,6 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     return res;
-
 }
 
 export async function PUT(req: Request): Promise<NextResponse> {
@@ -60,7 +59,10 @@ export async function PUT(req: Request): Promise<NextResponse> {
             _id: email,
             prefs: {
                 name: name,
-                balance: 500
+                llmSettings: {
+                    model: "DeepSeekV3",
+                    fullPerspective: false,
+                }
             }
         } as { _id: string; prefs: { name: string } });
 

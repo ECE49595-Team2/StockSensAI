@@ -3,18 +3,19 @@ import Portfolio from "@/models/portfolio-model";
 
 interface PortfoliosStoreType {
     portfolios: Map<string, Portfolio>;
-    lastUpdated: number;
+    refreshKey: number;
+    triggerRefresh: () => void;
     setPortfolios: (portfolios: Map<string, Portfolio>) => void;
     addPortfolio: (portfolio: Portfolio) => void;
     removePortfolio: (portfolioId: string) => void;
     updatePortfolio: (portfolioId: string, updatedPortfolio: Portfolio) => void;
     getPortfolio: (portfolioId: string) => Portfolio | undefined;
-    setLastUpdated: () => void;
 }
 
 export const usePortfoliosStore = create<PortfoliosStoreType>()((set, get) => ({
     portfolios: new Map(),
-    lastUpdated: Date.now(),
+    refreshKey: 0,
+    triggerRefresh: () => set((state) => ({ refreshKey: state.refreshKey + 1 })),
     setPortfolios: (portfolios) => set(() => ({ portfolios })),
     addPortfolio: (portfolio) => set((state) => {
         const newPortfolios = new Map(state.portfolios);
@@ -36,8 +37,5 @@ export const usePortfoliosStore = create<PortfoliosStoreType>()((set, get) => ({
     getPortfolio: (portfolioId) => {
         const portfolios = get().portfolios;
         return portfolios.get(portfolioId);
-    },
-    setLastUpdated: () => {
-        set(() => ({ lastUpdated: Date.now() }));
     }
 }));

@@ -1,11 +1,10 @@
 "use client";
 import { usePortfoliosStore } from "@/hooks/use-portfolios";
-import { useUser } from "@/hooks/use-user";
 import { Button } from "@/shadcn/ui/button";
 import { Card, CardDescription, CardTitle } from "@/shadcn/ui/card";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface PortfoliosCardProps {
     title: string;
@@ -16,32 +15,35 @@ interface PortfoliosCardProps {
 
 function PortfoliosCard({ title, description, endpoint, edit }: PortfoliosCardProps) {
     const router = useRouter();
-    const user = useUser((state) => state.user);
     const portfolios = usePortfoliosStore((state) => state.portfolios);
     const setPortfolios = usePortfoliosStore((state) => state.setPortfolios);
-    const setLastUpdated = usePortfoliosStore((state) => state.setLastUpdated);
-    const email = user?.email;
+    const triggerRefresh = usePortfoliosStore((state) => state.triggerRefresh);
+    const [pressed, setPressed] = useState(false);
 
     useEffect(() => { }, [edit]);
 
     const handleDelete = () => {
-        fetch(`/api/user/portfolios/${email}/${endpoint}`, {
+        fetch(`/api/portfolio/${endpoint}`, {
             method: "DELETE",
             credentials: "include",
             cache: "no-store",
         }).then((response) => {
             if (response.ok) {
                 setPortfolios(new Map([...portfolios].filter(([key]) => key !== endpoint)));
-                setLastUpdated();
+                triggerRefresh();
                 router.refresh();
             }
         });
         
     }
-
+    
     return (
         <Card
-            onClick={() => router.push(`/dashboard/portfolios/${endpoint}`)} className="relative cursor-pointer bg-secondary text-black p-4 "
+            onMouseDown={() => setPressed(true)}
+            onMouseUp={() => setPressed(false)}
+            onMouseLeave={() => setPressed(false)}
+            className={`max-w-[20rem] relative cursor-pointer bg-secondary text-black p-4 ${pressed ? "scale-95 transition-transform duration-150" : "transition-transform duration-150"}`}
+            onClick={() => router.push(`/dashboard/portfolios/${endpoint}`)} 
         >
             {edit &&
                 <Button

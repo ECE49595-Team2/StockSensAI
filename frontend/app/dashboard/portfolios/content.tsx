@@ -14,11 +14,12 @@ function PortfolioContent({ edit }: PortfolioContentProps) {
     const user = useUser((state) => state.user);
     const [loading, isLoading] = useState<boolean>(true);
     const portfolios = usePortfoliosStore((state) => state.portfolios);
-    const setPortfolios = usePortfoliosStore((state) => state.setPortfolios)
+    const setPortfolios = usePortfoliosStore((state) => state.setPortfolios);
+    const refreshKey = usePortfoliosStore((state) => state.refreshKey);
 
-       useEffect(() => {
+    useEffect(() => {
         if (user) {
-            fetch(`/api/user/portfolios/${user.email}`, {
+            fetch("/api/user/portfolios/", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
@@ -29,20 +30,27 @@ function PortfolioContent({ edit }: PortfolioContentProps) {
                             setPortfolios(new Map<string, Portfolio>()); // Set an empty Map
                             return;
                         }
-    
+
+                        // Sort portfolios in descending order by date_created
+                        result.sort((a, b) => {
+                            const aDate = a?.date_created ?? "";
+                            const bDate = b?.date_created ?? "";
+                            return bDate.localeCompare(aDate);
+                        });
+
                         // Create a new Map instance to avoid direct mutation
                         const newPortfolios = new Map<string, Portfolio>();
                         result.forEach((portfolio: Portfolio) => {
                             newPortfolios.set(portfolio._id, portfolio);
                         });
-    
+
                         setPortfolios(newPortfolios); // Update state with the new Map
                     }
                     isLoading(false);
                 });
             });
         }
-    }, [setPortfolios, isLoading, user?.email]);
+    }, [setPortfolios, isLoading, user?.email, refreshKey]);
 
     if (loading) {
         return <div>

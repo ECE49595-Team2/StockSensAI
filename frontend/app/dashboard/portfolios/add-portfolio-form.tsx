@@ -21,7 +21,7 @@ const formSchema = z.object({
 
 function AddPortfolioForm() {
     const user = useUser((state) => state.user);
-    const setLastUpdated = usePortfoliosStore((state) => state.setLastUpdated);
+    const triggerRefresh = usePortfoliosStore((state) => state.triggerRefresh);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -37,7 +37,7 @@ function AddPortfolioForm() {
             .digest("hex")
             .slice(0, 8);
 
-        fetch(`/api/user/portfolios/${user?.email}/${id}`, {
+        fetch(`/api/portfolio/${id}`, {
             method: "PUT",
             body: JSON.stringify(values),
             headers: {
@@ -46,6 +46,7 @@ function AddPortfolioForm() {
         }).then((response) => {
             if (response.ok) {
                 form.reset();
+                triggerRefresh();
                 toast.success("Portfolio created successfully", {
                     richColors: true,
                     position: "top-center",
@@ -58,7 +59,8 @@ function AddPortfolioForm() {
             }
         });
 
-        setLastUpdated();
+        
+       
     }
 
     return (
@@ -97,7 +99,7 @@ function AddPortfolioForm() {
                             </FormItem>
                         )}
                     ></FormField>
-                    <Button type="submit" className="cursor-pointer">Create Portfolio</Button>
+                    <Button type="submit" className="cursor-pointer active:scale-95">Create Portfolio</Button>
                 </form>
             </Form>
         </div>

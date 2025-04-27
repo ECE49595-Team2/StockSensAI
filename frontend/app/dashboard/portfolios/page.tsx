@@ -36,6 +36,7 @@ function PortfoliosPage() {
             <PortfolioMenubar edit={edit} setEditMode={setEditMode} />
             <PortfolioContent edit={edit} />
         </div>
+
     );
 }
 

@@ -42,7 +42,7 @@ function UserDropdown() {
             if (!email) {
                 return null;
             }
-            const response = await fetch(`/api/user/prefs/${email}`, {
+            const response = await fetch("/api/user/prefs/", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
@@ -56,7 +56,7 @@ function UserDropdown() {
             }
         }
         fetchUserData(user?.email);
-    }, [user?.email, user?.name, setUser]);
+    }, [user?.email, setUser]);
 
     const logout = async () => {
         const response = await fetch("/api/user", {

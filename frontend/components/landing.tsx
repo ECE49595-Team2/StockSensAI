@@ -1,12 +1,27 @@
+"use server";
 import { Button } from "@/shadcn/ui/button";
 import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@/shadcn/ui/tooltip";
 import Image from "next/image";
 import SamuraiIcon from "@/public/Samurai Icon.png";
 import AuthDrawer from "@/components/auth/auth-drawer";
-import { useUser } from "@/hooks/use-user";
+import { cookies } from "next/headers";
+import nano from "nano";
+import { COUCHDB_URL } from "@/app/env";
 
-function Landing() {
-    const user = useUser((state) => state.user);
+async function Landing() {
+    const authSession = (await cookies()).get("AuthSession");
+    const client = nano({
+        url: COUCHDB_URL,
+        requestDefaults: {
+            headers: {
+                Cookie: authSession ? `AuthSession=${authSession.value}` : "",
+            },
+        },
+    })
+    const session = await client.session();
+    console.log("Session:", session);
+    const isLoggedIn = session.userCtx.name !== null && session.userCtx.name !== "admin";
+    console.log("isLoggedIn", isLoggedIn);  
 
     return (
         <div className="flex-1 min-h-[calc(100svh_-_7rem)] w-screen flex flex-col gap-5 items-center justify-center bg-gradient-to-t from-purple-800 to-purple-1200 p-4">
@@ -24,7 +39,7 @@ function Landing() {
                 Become a Stock-Trading Warrior
             </h1>
             <h2>Master the art of portfolio strategy with the power of AI</h2>
-            {!user && <AuthDrawer>
+            {!isLoggedIn && <AuthDrawer>
                 <Button>Start your journey</Button>
             </AuthDrawer>
             }

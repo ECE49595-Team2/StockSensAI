@@ -3,14 +3,20 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 interface ChatStoreType {
-    messages: { text: string, type: ChatBubbleType }[];
-    setMessages: (messages: { text: string, type: ChatBubbleType }[]) => void;
+    messages: { content: string, role: ChatBubbleType }[];
+    setMessages: (updater: (messages: { content: string, role: ChatBubbleType }[]) => { content: string, role: ChatBubbleType }[]) => void;
+    loading: boolean;
+    setLoading: (loading: boolean) => void;
 }
 
 export const useChatStore = create<ChatStoreType>()(
     persist((set) => ({
         messages: [],
-        setMessages: (messages: { text: string, type: ChatBubbleType }[]) => set({ messages }),
+        loading: false,
+        setMessages: (updater) => set((state) => ({
+            messages: updater(state.messages),
+        })),
+        setLoading: (loading: boolean) => set({ loading }),
     }), {
         name: "chat-store",
         storage: createJSONStorage(() => sessionStorage),
