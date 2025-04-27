@@ -1,9 +1,11 @@
+import { ALGO_URL } from "@/app/env";
+
 export async function POST(req: Request, { params }: { params: Promise<{ symbol: string, id: string }> }) {
     const queries = await params;
     const symbol = queries.symbol;
     const id = queries.id;
     const { quantity } = await req.json();
-    const algoUrl = `http://localhost:8000/buy?portfolio_id=${id}&symbol=${symbol}&quantity=${quantity}`;
+    const algoUrl = `http://${ALGO_URL}/buy?portfolio_id=${id}&symbol=${symbol}&quantity=${quantity}`;
 
     const response = await fetch(algoUrl, {
         method: "POST", 
@@ -26,7 +28,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ symbo
     const symbol = queries.symbol;
     const id = queries.id;
     const { quantity } = await req.json();
-    const algoUrl = `http://localhost:8000/sell?portfolio_id=${id}&symbol=${symbol}&quantity=${quantity}`;
+    const algoUrl = `http://${ALGO_URL}/sell?portfolio_id=${id}&symbol=${symbol}&quantity=${quantity}`;
 
     const response = await fetch(algoUrl, {
         method: "POST", 
