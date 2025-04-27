@@ -1,5 +1,5 @@
 "use server";
-import { COUCHDB_URL } from "@/app/env";
+import { COUCHDB_URL, LLM_URL } from "@/app/env";
 import { Card } from "@/shadcn/ui/card";
 import { Bot } from "lucide-react";
 import nano from "nano";
@@ -50,7 +50,7 @@ export async function AdviserWidget() {
             <p>No stocks owned yet.</p>
         </Card>);
     }
-    const llmResponse = await fetch("http://localhost:8011/summary", {
+    const llmResponse = await fetch(`${LLM_URL}/summary`, {
         method: "POST",
         cache: "no-cache",
         headers: {
