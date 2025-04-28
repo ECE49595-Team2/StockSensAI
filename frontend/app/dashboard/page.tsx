@@ -69,13 +69,13 @@ async function Dashboard() {
                 <Suspense fallback={<Skeleton className="w-full h-30 bg-gray-200 col-span-2" />}>
                     <BalanceWidget />
                 </Suspense>
-                {/* <Suspense fallback={<Skeleton className="w-full bg-gray-200 col-span-2 p-8">
+                <Suspense fallback={<Skeleton className="w-full bg-gray-200 col-span-2 p-8">
                     <Bot />
                     <h1 className="text-md font-bold text-gray-500">Adviser</h1>
                     <p className="text-4xl font-bold slide-up">Loading...</p>
                 </Skeleton>}>
                     <AdviserWidget />
-                </Suspense> */}
+                </Suspense>
                 <DashboardChart />
             </div>
         </div>

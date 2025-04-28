@@ -2,103 +2,100 @@
 
 import { useStockSelection } from "@/hooks/use-stock-select";
 import { Switch } from "@/shadcn/ui/switch";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 function BackTradingToggle({ strategy_id, id }: { id: string, strategy_id: string | null }) {
-    const [isBacktrading, setIsBacktrading] = useState(strategy_id !== null);
+    const [isBacktrading, setIsBacktrading] = useState(strategy_id !== "");
     const [isLoading, setIsLoading] = useState(false);
     const selection = useStockSelection((state) => state.selection);
 
-    useEffect(() => {
-        async function startStrategy() {
-            setIsLoading(true);
-           const response = await fetch("/api/algo/backtrading/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    symbol: selection,
-                    id: id,
-                    isBacktrading: true
-                }),
-            });
-            if (!response.ok) {
-                toast.error("Failed to start backtrading", {
-                    richColors: true,
-                    description: "Failed to start backtrading",
-                    position: "top-center"
-                });
-                console.error("Failed to start backtrading");
-                return;
-            }
+    console.log(strategy_id, id, selection);
 
-            const data = await response.json();
-            if (data.error) {
-                console.error("Error starting backtrading:", data.error);
-                return;
-            }
-            setIsLoading(false);
-            toast.success("Backtrading started successfully", {
+    async function startStrategy() {
+        setIsLoading(true);
+       const response = await fetch("/api/algo/backtrading/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                symbol: selection,
+                id: id,
+                isBacktrading: true
+            }),
+        });
+        if (!response.ok) {
+            toast.error("Failed to start backtrading", {
                 richColors: true,
-                description: "Backtrading started successfully",
+                description: "Failed to start backtrading",
                 position: "top-center"
             });
-        
-
+            console.error("Failed to start backtrading");
+            return;
         }
 
-        async function stopStrategy() {
-            setIsLoading(true);
-           const response = await fetch("/api/algo/backtrading/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    symbol: selection,
-                    id: id,
-                    isBacktrading: false
-                }),
-            });
+        const data = await response.json();
+        if (data.error) {
+            console.error("Error starting backtrading:", data.error);
+            return;
+        }
+        setIsLoading(false);
+        toast.success("Backtrading started successfully", {
+            richColors: true,
+            description: "Backtrading started successfully",
+            position: "top-center"
+        });
+    
 
-            if (!response.ok) {
-                toast.error("Failed to stop backtrading", {
-                    richColors: true,
-                    description: "Failed to stop backtrading",
-                    position: "top-center"
-                });
-                console.error("Failed to stop backtrading");
-                return;
-            }
-           
-            setIsLoading(false);
-            toast.success("Backtrading stopped successfully", {
+    }
+
+    async function stopStrategy() {
+        setIsLoading(true);
+       const response = await fetch("/api/algo/backtrading/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                symbol: selection,
+                id: id,
+                isBacktrading: false
+            }),
+        });
+
+        if (!response.ok) {
+            toast.error("Failed to stop backtrading", {
                 richColors: true,
-                description: "Backtrading stopped successfully",
+                description: "Failed to stop backtrading",
                 position: "top-center"
             });
-
+            console.error("Failed to stop backtrading");
+            return;
         }
+       
+        setIsLoading(false);
+        toast.success("Backtrading stopped successfully", {
+            richColors: true,
+            description: "Backtrading stopped successfully",
+            position: "top-center"
+        });
 
-        if (isBacktrading) {
-            startStrategy();
-        } else {
-            stopStrategy();
-        }
-
-
-    }, [isBacktrading]);
-
-    useEffect(() => { }, [selection]);
+    }
 
     return (
         <div className="flex flex-row w-full gap-2">
             <h1>Toggle Backtrading</h1>
             <Switch
                 disabled={selection === null || isLoading}
-                onClick={() => setIsBacktrading(!isBacktrading)}
+                onClick={async () => {
+                    if (!isBacktrading) {
+                        await startStrategy();
+                    } else {
+                        await stopStrategy();
+                    }
+                    setIsBacktrading(!isBacktrading);
+                }}
                 checked={isBacktrading}
                 className="w-10 h-6 bg-gray-200 rounded-full relative transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             />

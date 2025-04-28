@@ -4,7 +4,6 @@ import NewsAnalysis from "./news-analysis/news-analysis";
 import PortfolioName from "./portfolio-name";
 import StocksContainer from "./stocks-container/stocks-container";
 import SidebarName from "./stocks-container/sidebar-name";
-import { Switch } from "@/shadcn/ui/switch";
 import BuySell from "./stocks-container/buy-sell";
 import nano from "nano";
 import { COUCHDB_URL } from "@/app/env";

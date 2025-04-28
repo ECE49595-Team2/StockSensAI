@@ -1,14 +1,14 @@
 "use client";
 
-import { ALGO_URL } from "@/app/env";
 import { useStockSelection } from "@/hooks/use-stock-select";
+import { Skeleton } from "@/shadcn/ui/skeleton";
 import { Switch } from "@/shadcn/ui/switch";
 import { useEffect, useState } from "react";
 
 function PerformanceWidget({ id }: { id: string }) {
     const [singleOrMulti, setSingleOrMulti] = useState<"single" | "multiple">("single");
     const selection = useStockSelection((state) => state.selection);
-    const [gain, setGain] = useState<number>(0);
+    const [gain, setGain] = useState<number | null>(null);
 
     useEffect(() => {
         async function fetchPerformance() {
@@ -34,7 +34,7 @@ function PerformanceWidget({ id }: { id: string }) {
             if (selectedPosition) {
                 setGain(selectedPosition.gain);
             } else {
-                setGain(0); // Default to 0 if no matching ticker is found
+                setGain(null); // Default to 0 if no matching ticker is found
             }
         }
 
@@ -43,6 +43,13 @@ function PerformanceWidget({ id }: { id: string }) {
 
     useEffect(() => { }, [gain]);
 
+    if (gain === null) {
+        return (
+            <Skeleton className="h-10 p-3 flex items-center justify-center">
+                Loading...
+            </Skeleton>
+        );
+    }
 
     return (
         <div className="flex flex-row gap-4 items-center">

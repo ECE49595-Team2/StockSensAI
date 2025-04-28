@@ -35,12 +35,17 @@ function StocksContainerClient({ stocks, id }: {
                 opts={{
                     align: "start",
                 }}
-                className="ml-12 mr-12"
+                className="ml-12 mr-12 flex flex-1"
             >
-                <CarouselContent className="flex flex-1">
+                <CarouselContent
+                style={{
+                    display: "flex",
+                    flex: "1",
+                }}
+                className="">
                     {Object.entries(stocks).map(([symbol, data]) => (
-                        <CarouselItem className={`${stocks.length < 3 ? (stocks.length < 2 ? "basis-full" : "basis-1/2") : "basis-1/3"}`} key={symbol}>
-                            <Card key={symbol} onClick={handleStockClick(symbol)} className={`h-full rounded border p-4 flex flex-row shadow-sm min-w-[min-content] ${selection === symbol ? "bg-primary text-white" : ""}`}>
+                        <CarouselItem className={`${Object.keys(stocks).length === 1 ? "basis-full" : "basis-1/2"} max-w-[20rem]`} key={symbol}>
+                            <Card key={symbol} onClick={handleStockClick(symbol)} className={`h-full rounded border p-4 flex flex-row shadow-sm ${selection === symbol ? "bg-primary text-white" : ""}`}>
                                 <div className="flex flex-col gap-2">
                                     <h2 className="font-bold text-lg">{symbol}</h2>
                                     <p>Amount owned: {data}</p>
