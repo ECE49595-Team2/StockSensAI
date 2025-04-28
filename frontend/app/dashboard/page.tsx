@@ -1,15 +1,29 @@
 import { Skeleton } from "@/shadcn/ui/skeleton";
 import { Suspense } from "react";
-import { BalanceWidget } from "./components/dashboard-balance";
+import React from "react";
+
+const BalanceWidget = React.lazy(() =>
+    import("./components/dashboard-balance").then((module) => ({
+        default: module.BalanceWidget,
+    }))
+);
+
 import DashboardWelcome from "./components/dashboard-welcome";
-import { AdviserWidget } from "./components/dashboard-adviser";
+const AdviserWidget = React.lazy(() =>
+    import("./components/dashboard-adviser").then((module) => ({
+        default: module.AdviserWidget,
+    }))
+);
+
 import { cookies } from "next/headers";
 import { COUCHDB_URL } from "../env";
 import nano from "nano";
 import { Card, CardContent, CardTitle } from "@/shadcn/ui/card";
 import GoToPortfoliosButton from "./portfolios/go-to-button";
 import { Bot } from "lucide-react";
-import { DashboardChart } from "./components/dashboard-chart";
+import dynamic from "next/dynamic";
+
+const DashboardChart = dynamic(() => import("./components/dashboard-chart").then((mod) => mod.DashboardChart), { ssr: true });
 
 async function Dashboard() {
     const authSession = (await cookies()).get("AuthSession");

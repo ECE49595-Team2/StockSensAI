@@ -12,11 +12,12 @@ export async function GET(_: Request, { params }: { params: Promise<{ ticker: st
         },
         body: JSON.stringify({
             ticker: ticker,
-            model: "LLAMA",
+            model: "DeepSeekV3",
             ageLim: 0
         }),
     });
 
+    console.log("Response: ", response.status, response.body, response.ok);
     if (!response.ok) {
         return new Response("Failed to fetch news", { status: response.status });
     }

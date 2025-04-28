@@ -43,8 +43,6 @@ export function DashboardChart() {
   const user = useUser((state => state.user));
 
   useEffect(() => {
-    console.log("user", user);
-    console.log("char data", chartData);
     if (user?.email) {
       fetch("/api/algo/update-account/", {
         method: "GET",
