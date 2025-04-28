@@ -22,9 +22,9 @@ const std::string OPEN_ROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/comp
 const std::string POLYGON_ENDPOINT = "https://api.polygon.io/v2";
 
 // Define constant Open Router model tags
-const std::string LLAMA = "meta-llama/llama-3.3-70b-instruct:free";
-const std::string DEEPSEEK_R1 = "deepseek/deepseek-r1:free";
-const std::string DEEPSEEK_V3 = "deepseek/deepseek-chat-v3-0324:free";
+const std::string LLAMA = "meta-llama/llama-3.3-70b-instruct";
+const std::string DEEPSEEK_R1 = "deepseek/deepseek-r1";
+const std::string DEEPSEEK_V3 = "deepseek/deepseek-chat-v3-0324";
 
 // Define agent adversities enum
 enum AverseLevel
