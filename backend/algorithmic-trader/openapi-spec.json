@@ -72,6 +72,73 @@
         }
       }
     },
+    "/start_user_defined_strategy": {
+      "post": {
+        "summary": "Start User Strategy",
+        "description": "Start a new strategy",
+        "operationId": "start_user_strategy_start_user_defined_strategy_post",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Portfolio Id"
+            }
+          },
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "buy_thresh",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Buy Thresh"
+            }
+          },
+          {
+            "name": "sell_thresh",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Sell Thresh"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/stop_strategy": {
       "post": {
         "summary": "Stop Strategy",
@@ -211,6 +278,63 @@
             "schema": {
               "type": "string",
               "title": "Symbol"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get_user_defined_strategy_backtester": {
+      "get": {
+        "summary": "Strategy Backtester",
+        "operationId": "strategy_backtester_get_user_defined_strategy_backtester_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "buy_thresh",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Buy Thresh"
+            }
+          },
+          {
+            "name": "sell_thresh",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Sell Thresh"
             }
           }
         ],

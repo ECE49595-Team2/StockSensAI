@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from typing import List, Dict
 from apscheduler.schedulers.background import BackgroundScheduler
 from Strategies.Simple_Moving_Average import run_SMA, SMACross
+from Strategies.User_Defined_Limit import run_Limit, Limit
 import uuid
 import yfinance as yf
 from backtesting import Backtest
@@ -120,6 +121,27 @@ def start_strategy(portfolio_id: str, symbol: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/start_user_defined_strategy")
+def start_user_strategy(portfolio_id: str, symbol: str, buy_thresh: float, sell_thresh: float):
+    """Start a new strategy"""
+    try:
+        user_doc = db.get(portfolio_id)
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        strategy = user_doc.get("strategy_id", "")
+        if(strategy != ""):
+            raise HTTPException(status_code=400, detail="A strategy is already running")
+        strategy_id = str(uuid.uuid4())
+        user_doc["strategy_id"] = strategy_id
+        db.save(user_doc)
+        
+        job = scheduler.add_job(run_Limit, "interval", seconds=60, args=[portfolio_id, symbol, buy_thresh, sell_thresh], id=strategy_id)
+        jobs[strategy_id] = job
+        return {"message": f"Started strategy {strategy_id} for portfolio {portfolio_id}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/stop_strategy")
 def stop_strategy(portfolio_id: str):
     """Stop a running strategy"""
@@ -184,7 +206,28 @@ def strategy_backtester(symbol: str):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
             result = bt.run()
-        print(result)
+        equity = result['_equity_curve']['Equity']
+        retval = []
+        for i in range(len(equity.values)):
+            retval.append({"Index": equity.index[i], "Value": equity.values[i]})
+        return {"Data": retval}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/get_user_defined_strategy_backtester")    
+def strategy_backtester(symbol: str, buy_thresh: float, sell_thresh: float):
+    try:
+        df = get_data(symbol)
+        df = df.reset_index()
+        # Keep only required columns for Backtest
+        df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+        df['Date'] = pd.to_datetime(df['Date'])
+        df.set_index('Date', inplace=True)
+        bt = Backtest(df, Limit, cash=100000, commission=.002)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            result = bt.run(buy_limit=buy_thresh, sell_limit=sell_thresh)
         equity = result['_equity_curve']['Equity']
         retval = []
         for i in range(len(equity.values)):
@@ -243,9 +286,9 @@ async def update_account_history(portfolio_id: str, period = "7d"):
                     price = closing_prices[stock].loc[formatted_day, "Close"] if formatted_day in closing_prices[stock].index else None
                     if(price is not None):
                         if(datetime.fromisoformat(transaction["timestamp"]) <= day and transaction["type"] == "Buy"):
-                            total_value += closing_prices[stock].loc[formatted_day, "Close"] * transaction["quantity"]
-                        elif(datetime.fromisoformat(transaction["timestamp"]) <= day and transaction["type"] == "Sell"):
                             total_value -= closing_prices[stock].loc[formatted_day, "Close"] * transaction["quantity"]
+                        elif(datetime.fromisoformat(transaction["timestamp"]) <= day and transaction["type"] == "Sell"):
+                            total_value += closing_prices[stock].loc[formatted_day, "Close"] * transaction["quantity"]
                     else:
                         no_data = True
                         break
@@ -407,7 +450,6 @@ async def multiple_day(portfolio_id: str, symbol: str, days: int = 7):
         current_values = get_stock_prices([symbol])
         stock = yf.Ticker(symbol)
         hist = stock.history(period=f'{days}d')
-        print(hist)
         history = []
         for x in range(days):
             day = datetime.combine((datetime.now() - timedelta(days=days - 1 - x)).date(), datetime.max.time())
