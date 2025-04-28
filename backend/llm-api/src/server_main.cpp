@@ -1,3 +1,8 @@
+/*
+Author: Kevin DeWall
+Purpose: baseline server to wrap all the code together
+*/
+
 #include <sys/socket.h>
 #include <iostream>
 #include <bits/stdc++.h>
